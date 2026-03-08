@@ -2,10 +2,12 @@ import SwiftUI
 
 struct BlueprintView: View {
     let venue: Venue
+    var selectedDate: String = "SAT, MAR 8"
     @Environment(\.dismiss) var dismiss
     @State private var selectedTable: VenueTable?
     @State private var showTableSheet = false
     @State private var scale: CGFloat = 1.0
+    @State private var baseScale: CGFloat = 1.0
     @State private var offset: CGSize = .zero
 
     var availableCount: Int {
@@ -123,7 +125,12 @@ struct BlueprintView: View {
                     .offset(offset)
                     .gesture(
                         MagnificationGesture()
-                            .onChanged { val in scale = max(0.8, min(2.5, val)) }
+                            .onChanged { value in
+                                scale = max(0.8, min(2.5, baseScale * value))
+                            }
+                            .onEnded { _ in
+                                baseScale = scale
+                            }
                     )
                 }
                 .background(Color(white: 0.04))
@@ -144,7 +151,7 @@ struct BlueprintView: View {
         }
         .sheet(isPresented: $showTableSheet) {
             if let table = selectedTable {
-                TableDetailView(table: table, venue: venue)
+                TableDetailView(table: table, venue: venue, selectedDate: selectedDate)
                     .presentationDetents([.large])
                     .presentationDragIndicator(.visible)
             }

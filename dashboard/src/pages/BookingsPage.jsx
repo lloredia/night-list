@@ -1,5 +1,5 @@
 // BookingsPage.jsx
-export function BookingsPage() {
+export default function BookingsPage() {
   return (
     <div className="p-8">
       <h1 className="text-3xl font-black text-white mb-2">Bookings</h1>
@@ -12,4 +12,3 @@ export function BookingsPage() {
     </div>
   );
 }
-export default BookingsPage;

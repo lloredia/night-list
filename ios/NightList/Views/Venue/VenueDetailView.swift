@@ -2,6 +2,7 @@ import SwiftUI
 
 struct VenueDetailView: View {
     let venue: Venue
+    var selectedDate: String = "SAT, MAR 8"
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
@@ -103,7 +104,7 @@ struct VenueDetailView: View {
                         .padding(.top, 14)
 
                         // CTA
-                        NavigationLink(destination: BlueprintView(venue: venue)) {
+                        NavigationLink(destination: BlueprintView(venue: venue, selectedDate: selectedDate)) {
                             Text("View Floor Plan & Reserve")
                                 .font(.subheadline.bold())
                                 .tracking(1)

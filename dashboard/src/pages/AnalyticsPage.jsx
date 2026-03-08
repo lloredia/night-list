@@ -1,4 +1,4 @@
-export function AnalyticsPage() {
+export default function AnalyticsPage() {
   return (
     <div className="p-8">
       <h1 className="text-3xl font-black text-white mb-2">Analytics</h1>
@@ -11,4 +11,3 @@ export function AnalyticsPage() {
     </div>
   );
 }
-export default AnalyticsPage;

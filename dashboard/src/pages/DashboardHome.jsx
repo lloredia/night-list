@@ -18,14 +18,26 @@ const recentBookings = [
   { name: "Darius F.", table: "VIP 2", time: "10:00 PM", party: 8, spend: 1500, status: "confirmed" },
 ];
 
+const todayLabel = new Intl.DateTimeFormat("en-US", {
+  weekday: "long",
+  month: "long",
+  day: "numeric",
+}).format(new Date());
+
+const statusStyles = {
+  confirmed: "bg-green-500/10 text-green-400",
+  pending: "bg-yellow-500/10 text-yellow-400",
+  cancelled: "bg-red-500/10 text-red-400",
+};
+
 export default function DashboardHome() {
   return (
     <div className="p-8">
       {/* Header */}
-      <div className="flex justify-between items-start mb-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start mb-8">
         <div>
           <div className="text-[#555] text-xs tracking-widest uppercase mb-1">Tonight at NOIR</div>
-          <h1 className="text-3xl font-black text-white">Saturday, March 8</h1>
+          <h1 className="text-3xl font-black text-white">{todayLabel}</h1>
           <p className="text-[#444] text-sm mt-1">Doors open 9PM · Closes 4AM</p>
         </div>
         <div className="flex gap-3">
@@ -35,7 +47,7 @@ export default function DashboardHome() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
         {[
           { icon: "📋", label: "Reservations", value: "24", change: "+6 vs last Sat", color: "#C9A84C" },
           { icon: "💰", label: "Projected Revenue", value: "$18,400", change: "+12% vs last Sat", color: "#4ade80" },
@@ -52,7 +64,7 @@ export default function DashboardHome() {
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Revenue Chart */}
         <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-2xl p-6">
           <div className="text-[#555] text-xs tracking-widest uppercase mb-1">This Week</div>
@@ -92,28 +104,30 @@ export default function DashboardHome() {
           <button className="text-[#C9A84C] text-sm font-semibold">View All →</button>
         </div>
 
-        <div className="space-y-2">
-          {/* Header */}
-          <div className="grid grid-cols-5 text-[10px] text-[#333] uppercase tracking-widest pb-2 border-b border-[#111] px-3">
-            <span>Guest</span><span>Table</span><span>Time</span><span>Party</span><span className="text-right">Spend</span>
-          </div>
-          {recentBookings.map((b, i) => (
-            <div key={i} className="grid grid-cols-5 items-center px-3 py-3 rounded-xl hover:bg-[#111] transition-colors">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-full bg-[#1a1a1a] flex items-center justify-center text-xs">👤</div>
-                <span className="text-white text-sm font-semibold">{b.name}</span>
-              </div>
-              <span className="text-[#666] text-sm">{b.table}</span>
-              <span className="text-[#666] text-sm">{b.time}</span>
-              <span className="text-[#666] text-sm">{b.party} ppl</span>
-              <div className="flex items-center justify-end gap-3">
-                <span className="text-[#C9A84C] font-bold">${b.spend.toLocaleString()}</span>
-                <span className={`text-[9px] font-bold uppercase px-2 py-1 rounded-lg ${b.status === "confirmed" ? "bg-green-500/10 text-green-400" : "bg-yellow-500/10 text-yellow-400"}`}>
-                  {b.status}
-                </span>
-              </div>
+        <div className="overflow-x-auto">
+          <div className="min-w-[640px] space-y-2">
+            {/* Header */}
+            <div className="grid grid-cols-5 text-[10px] text-[#333] uppercase tracking-widest pb-2 border-b border-[#111] px-3">
+              <span>Guest</span><span>Table</span><span>Time</span><span>Party</span><span className="text-right">Spend</span>
             </div>
-          ))}
+            {recentBookings.map((b) => (
+              <div key={`${b.name}-${b.table}-${b.time}`} className="grid grid-cols-5 items-center px-3 py-3 rounded-xl hover:bg-[#111] transition-colors">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full bg-[#1a1a1a] flex items-center justify-center text-xs">👤</div>
+                  <span className="text-white text-sm font-semibold">{b.name}</span>
+                </div>
+                <span className="text-[#666] text-sm">{b.table}</span>
+                <span className="text-[#666] text-sm">{b.time}</span>
+                <span className="text-[#666] text-sm">{b.party} ppl</span>
+                <div className="flex items-center justify-end gap-3">
+                  <span className="text-[#C9A84C] font-bold">${b.spend.toLocaleString()}</span>
+                  <span className={`text-[9px] font-bold uppercase px-2 py-1 rounded-lg ${statusStyles[b.status] || statusStyles.pending}`}>
+                    {b.status}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

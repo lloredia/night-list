@@ -83,7 +83,7 @@ struct DiscoverView: View {
 
                         // Venue Cards
                         ForEach(venues) { venue in
-                            NavigationLink(destination: VenueDetailView(venue: venue)) {
+                            NavigationLink(destination: VenueDetailView(venue: venue, selectedDate: selectedDate)) {
                                 VenueCard(venue: venue)
                             }
                             .buttonStyle(.plain)

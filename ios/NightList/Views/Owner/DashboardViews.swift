@@ -107,6 +107,17 @@ struct BookingCard: View {
 
 // MARK: - Owner Dashboard
 struct OwnerDashboardView: View {
+    private static let headerDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale.current
+        formatter.dateFormat = "EEEE, MMMM d"
+        return formatter
+    }()
+
+    private var headerDateText: String {
+        Self.headerDateFormatter.string(from: Date())
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -121,7 +132,7 @@ struct OwnerDashboardView: View {
                                 .font(.caption.bold()).foregroundStyle(Color(white: 0.3)).tracking(2).textCase(.uppercase)
                             Text("NOIR Dashboard")
                                 .font(.system(size: 24, weight: .black)).foregroundStyle(.white)
-                            Text("Saturday, March 8 · Tonight")
+                            Text("\(headerDateText) · Tonight")
                                 .foregroundStyle(Color(white: 0.35)).font(.subheadline)
                         }
                         .padding(.horizontal, 20)

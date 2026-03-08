@@ -4,6 +4,7 @@ import SwiftUI
 struct TableDetailView: View {
     let table: VenueTable
     let venue: Venue
+    var selectedDate: String = "SAT, MAR 8"
     @State private var partySize = 4
     @State private var showBookingConfirm = false
     @Environment(\.dismiss) var dismiss
@@ -99,7 +100,7 @@ struct TableDetailView: View {
             }
         }
         .navigationDestination(isPresented: $showBookingConfirm) {
-            BookingConfirmView(table: table, venue: venue, partySize: partySize)
+            BookingConfirmView(table: table, venue: venue, partySize: partySize, selectedDate: selectedDate)
         }
     }
 }
@@ -135,10 +136,9 @@ struct BookingConfirmView: View {
     let table: VenueTable
     let venue: Venue
     let partySize: Int
+    let selectedDate: String
     @State private var showSuccess = false
     @Environment(\.dismiss) var dismiss
-
-    let selectedDate = "SAT, MAR 8"
 
     var body: some View {
         ZStack {
@@ -250,7 +250,7 @@ struct BookingSuccessView: View {
     let table: VenueTable
     let partySize: Int
     let date: String
-    let confirmCode = "NR" + String(Int.random(in: 100000...999999))
+    @State private var confirmCode = ""
 
     var body: some View {
         ZStack {
@@ -300,6 +300,11 @@ struct BookingSuccessView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 30)
+            }
+        }
+        .onAppear {
+            if confirmCode.isEmpty {
+                confirmCode = "NR" + String(Int.random(in: 100000...999999))
             }
         }
         .navigationBarBackButtonHidden(true)
