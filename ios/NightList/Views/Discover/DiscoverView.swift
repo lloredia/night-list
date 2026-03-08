@@ -17,37 +17,37 @@ struct DiscoverView: View {
 
                         // Header
                         HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Good Evening")
-                                    .font(.caption)
-                                    .foregroundStyle(.gray)
-                                    .tracking(2)
-                                    .textCase(.uppercase)
-                                Text("Find Your Night 🌙")
-                                    .font(.title2.bold())
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Discover")
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundStyle(Color(white: 0.45))
+                                Text("Venues tonight")
+                                    .font(.title2.weight(.semibold))
                                     .foregroundStyle(.white)
                             }
                             Spacer()
-                            Circle()
-                                .fill(Color(white: 0.1))
-                                .frame(width: 40, height: 40)
-                                .overlay(Text("👤").font(.body))
+                            Image(systemName: "person.circle.fill")
+                                .font(.system(size: 32))
+                                .foregroundStyle(Color(white: 0.35))
                         }
                         .padding(.horizontal, 20)
                         .padding(.top, 8)
 
                         // Search Bar
-                        HStack {
+                        HStack(spacing: 10) {
                             Image(systemName: "magnifyingglass")
-                                .foregroundStyle(.gray)
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(Color(white: 0.4))
                             Text("Search venues, areas...")
-                                .foregroundStyle(Color(white: 0.3))
+                                .foregroundStyle(Color(white: 0.35))
                                 .font(.subheadline)
                         }
-                        .padding(14)
-                        .background(Color(white: 0.07))
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
-                        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(white: 0.13)))
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(white: 0.06))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(white: 0.1), lineWidth: 1))
                         .padding(.horizontal, 20)
                         .padding(.top, 16)
 
@@ -58,13 +58,13 @@ struct DiscoverView: View {
                                     Button(date) {
                                         selectedDate = date
                                     }
-                                    .font(.caption.bold())
+                                    .font(.subheadline.weight(.medium))
                                     .padding(.horizontal, 14)
-                                    .padding(.vertical, 7)
-                                    .background(selectedDate == date ? Color(hex: "#C9A84C") : Color(white: 0.08))
-                                    .foregroundStyle(selectedDate == date ? .black : Color(white: 0.4))
+                                    .padding(.vertical, 8)
+                                    .background(selectedDate == date ? Color("Gold") : Color(white: 0.08))
+                                    .foregroundStyle(selectedDate == date ? .black : Color(white: 0.45))
                                     .clipShape(Capsule())
-                                    .overlay(Capsule().stroke(Color(white: 0.13)).opacity(selectedDate == date ? 0 : 1))
+                                    .overlay(Capsule().stroke(Color(white: 0.12), lineWidth: 1).opacity(selectedDate == date ? 0 : 1))
                                 }
                             }
                             .padding(.horizontal, 20)
@@ -72,14 +72,12 @@ struct DiscoverView: View {
                         .padding(.top, 12)
 
                         // Section Header
-                        Text("Featured Tonight")
-                            .font(.caption.bold())
-                            .foregroundStyle(Color(white: 0.35))
-                            .tracking(2)
-                            .textCase(.uppercase)
+                        Text("Featured")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color(white: 0.4))
                             .padding(.horizontal, 20)
-                            .padding(.top, 20)
-                            .padding(.bottom, 12)
+                            .padding(.top, 24)
+                            .padding(.bottom, 10)
 
                         // Venue Cards
                         ForEach(venues) { venue in
@@ -109,90 +107,101 @@ struct VenueCard: View {
             ZStack(alignment: .topLeading) {
                 RoundedRectangle(cornerRadius: 0)
                     .fill(LinearGradient(colors: [Color(hex: "#1a1410"), Color(hex: "#0d0a05")], startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .frame(height: 140)
+                    .frame(height: 120)
 
-                Text("🖤").font(.system(size: 64))
+                Image(systemName: "building.2.fill")
+                    .font(.system(size: 40))
+                    .foregroundStyle(Color(white: 0.15))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                 if let promo = venue.promoText {
-                    Text("🎁 \(promo)")
-                        .font(.caption.bold())
-                        .foregroundStyle(Color(hex: venue.accentColorHex))
-                        .padding(.horizontal, 10).padding(.vertical, 5)
-                        .background(Color(hex: venue.accentColorHex).opacity(0.15))
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(hex: venue.accentColorHex).opacity(0.4)))
-                        .padding(12)
+                    HStack(spacing: 6) {
+                        Image(systemName: "tag.fill")
+                            .font(.caption2)
+                        Text(promo)
+                            .font(.caption.weight(.semibold))
+                    }
+                    .foregroundStyle(Color(hex: venue.accentColorHex))
+                    .padding(.horizontal, 10).padding(.vertical, 5)
+                    .background(Color(hex: venue.accentColorHex).opacity(0.2))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .padding(12)
                 }
 
                 VStack {
                     HStack {
                         Spacer()
                         HStack(spacing: 4) {
-                            Text("★").foregroundStyle(.yellow)
-                            Text("\(venue.rating, specifier: "%.1f")").foregroundStyle(.white).fontWeight(.bold)
+                            Image(systemName: "star.fill")
+                                .font(.caption2)
+                                .foregroundStyle(Color("Gold"))
+                            Text("\(venue.rating, specifier: "%.1f")")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.white)
                         }
-                        .font(.caption)
-                        .padding(.horizontal, 10).padding(.vertical, 5)
-                        .background(.black.opacity(0.6))
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .padding(.horizontal, 8).padding(.vertical, 4)
+                        .background(.black.opacity(0.5))
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
                     }
                     Spacer()
                     HStack {
-                        Text("OPEN UNTIL \(venue.openUntil)")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(Color(hex: venue.accentColorHex))
-                            .padding(.horizontal, 10).padding(.vertical, 4)
-                            .background(.black.opacity(0.6))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                        HStack(spacing: 4) {
+                            Image(systemName: "clock")
+                                .font(.system(size: 9, weight: .semibold))
+                            Text("Until \(venue.openUntil)")
+                                .font(.system(size: 10, weight: .semibold))
+                        }
+                        .foregroundStyle(Color(hex: venue.accentColorHex))
+                        .padding(.horizontal, 8).padding(.vertical, 4)
+                        .background(.black.opacity(0.5))
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
                         Spacer()
                     }
                 }
                 .padding(12)
             }
-            .frame(height: 140)
+            .frame(height: 120)
 
             // Info
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 3) {
+                    VStack(alignment: .leading, spacing: 2) {
                         Text(venue.name)
-                            .font(.title3.weight(.black))
+                            .font(.headline.weight(.semibold))
                             .foregroundStyle(.white)
-                            .tracking(2)
                         Text("\(venue.area) · \(venue.vibe)")
-                            .font(.caption)
-                            .foregroundStyle(Color(white: 0.35))
+                            .font(.subheadline)
+                            .foregroundStyle(Color(white: 0.4))
                     }
                     Spacer()
-                    VStack(alignment: .trailing, spacing: 2) {
+                    VStack(alignment: .trailing, spacing: 0) {
                         Text("$\(venue.minSpend)")
-                            .font(.title3.bold())
+                            .font(.subheadline.weight(.bold))
                             .foregroundStyle(Color(hex: venue.accentColorHex))
-                        Text("min spend").font(.system(size: 9)).foregroundStyle(Color(white: 0.25))
+                        Text("min")
+                            .font(.system(size: 10))
+                            .foregroundStyle(Color(white: 0.35))
                     }
                 }
 
-                // Tags
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 6) {
                         ForEach(venue.tags, id: \.self) { tag in
                             Text(tag)
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundStyle(Color(white: 0.4))
-                                .padding(.horizontal, 10).padding(.vertical, 4)
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(Color(white: 0.45))
+                                .padding(.horizontal, 8).padding(.vertical, 4)
                                 .background(Color(white: 0.08))
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(white: 0.13)))
+                                .clipShape(RoundedRectangle(cornerRadius: 6))
                         }
                     }
                 }
             }
-            .padding(16)
+            .padding(14)
         }
-        .background(Color(white: 0.05))
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color(white: 0.1)))
+        .background(Color(white: 0.06))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(white: 0.1), lineWidth: 1))
     }
 }
 

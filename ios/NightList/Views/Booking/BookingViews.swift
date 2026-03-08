@@ -18,18 +18,21 @@ struct TableDetailView: View {
 
                     // Table Hero Card
                     VStack(spacing: 8) {
-                        Text("🪑").font(.system(size: 48))
-                        Text("$\(table.price.formatted())")
-                            .font(.system(size: 36, weight: .black))
+                        Image(systemName: "table.furniture")
+                            .font(.system(size: 40))
                             .foregroundStyle(table.type.color)
-                        Text("Minimum Spend · \(table.capacity) guests max")
-                            .font(.caption)
-                            .foregroundStyle(Color(white: 0.35))
+                        Text("$\(table.price.formatted())")
+                            .font(.title.weight(.bold))
+                            .foregroundStyle(table.type.color)
+                        Text("Min spend · \(table.capacity) guests max")
+                            .font(.subheadline)
+                            .foregroundStyle(Color(white: 0.4))
 
                         if let promo = table.promoText {
-                            HStack(spacing: 8) {
-                                Text("🎁")
-                                Text(promo).font(.caption.bold()).foregroundStyle(Color(hex: "#C9A84C"))
+                            HStack(spacing: 6) {
+                                Image(systemName: "tag.fill")
+                                    .font(.caption2)
+                                Text(promo).font(.subheadline.weight(.medium)).foregroundStyle(Color("Gold"))
                             }
                             .padding(.horizontal, 16).padding(.vertical, 8)
                             .background(Color(hex: "#C9A84C").opacity(0.12))
@@ -45,20 +48,18 @@ struct TableDetailView: View {
                     .shadow(color: table.type.color.opacity(0.15), radius: 20)
 
                     // Info Rows
-                    VStack(spacing: 10) {
-                        InfoRow(icon: "⏰", color: Color(hex: "#F59E0B"), label: "Arrive By", value: table.arrivalDeadline)
-                        InfoRow(icon: "🍾", color: Color(hex: "#8B5CF6"), label: "Min Bottles", value: table.minBottles == 0 ? "No minimum" : "\(table.minBottles) bottle\(table.minBottles > 1 ? "s" : "")")
-                        InfoRow(icon: "📋", color: Color(hex: "#EC4899"), label: "Dress Code", value: table.dressCode)
-                        InfoRow(icon: "👥", color: Color(hex: "#10B981"), label: "Capacity", value: "Up to \(table.capacity) people")
+                    VStack(spacing: 8) {
+                        InfoRow(systemImage: "clock", color: Color(hex: "#F59E0B"), label: "Arrive by", value: table.arrivalDeadline)
+                        InfoRow(systemImage: "wineglass", color: Color(hex: "#8B5CF6"), label: "Min bottles", value: table.minBottles == 0 ? "None" : "\(table.minBottles) bottle\(table.minBottles > 1 ? "s" : "")")
+                        InfoRow(systemImage: "tshirt", color: Color(hex: "#EC4899"), label: "Dress code", value: table.dressCode)
+                        InfoRow(systemImage: "person.2", color: Color(hex: "#10B981"), label: "Capacity", value: "Up to \(table.capacity)")
                     }
 
                     // Party Size Picker
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Party Size")
-                            .font(.caption.bold())
-                            .foregroundStyle(Color(white: 0.35))
-                            .tracking(1)
-                            .textCase(.uppercase)
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Party size")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(Color(white: 0.4))
 
                         HStack {
                             Button(action: { if partySize > 1 { partySize -= 1 } }) {
@@ -84,15 +85,13 @@ struct TableDetailView: View {
 
                     // Reserve Button
                     Button(action: { showBookingConfirm = true }) {
-                        Text("Reserve This Table")
-                            .font(.subheadline.bold())
-                            .tracking(1)
-                            .textCase(.uppercase)
+                        Text("Reserve table")
+                            .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.black)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(LinearGradient(colors: [Color(hex: venue.accentColorHex), Color(hex: venue.accentColorHex).opacity(0.8)], startPoint: .leading, endPoint: .trailing))
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .padding(.vertical, 14)
+                            .background(Color(hex: venue.accentColorHex))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                     .padding(.bottom, 20)
                 }
@@ -107,27 +106,31 @@ struct TableDetailView: View {
 
 // MARK: - Info Row
 struct InfoRow: View {
-    let icon: String
+    let systemImage: String
     let color: Color
     let label: String
     let value: String
 
     var body: some View {
-        HStack(spacing: 14) {
-            RoundedRectangle(cornerRadius: 12)
-                .fill(color.opacity(0.15))
-                .frame(width: 40, height: 40)
-                .overlay(Text(icon).font(.body))
+        HStack(spacing: 12) {
+            Image(systemName: systemImage)
+                .font(.subheadline)
+                .foregroundStyle(color)
+                .frame(width: 24, alignment: .center)
             VStack(alignment: .leading, spacing: 2) {
-                Text(label).font(.system(size: 10)).foregroundStyle(Color(white: 0.3)).tracking(1).textCase(.uppercase)
-                Text(value).font(.subheadline.bold()).foregroundStyle(.white)
+                Text(label)
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color(white: 0.4))
+                Text(value)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.white)
             }
             Spacer()
         }
-        .padding(14)
-        .background(Color(white: 0.05))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(white: 0.08)))
+        .padding(12)
+        .background(Color(white: 0.06))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(white: 0.1), lineWidth: 1))
     }
 }
 
@@ -259,22 +262,29 @@ struct BookingSuccessView: View {
             VStack(spacing: 24) {
                 Spacer()
 
-                Text("🎉").font(.system(size: 72))
-                    .scaleEffect(1)
-                    .animation(.spring(response: 0.5, dampingFraction: 0.5), value: true)
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 64))
+                    .foregroundStyle(Color(hex: venue.accentColorHex))
 
-                Text("You're In!").font(.system(size: 32, weight: .black)).foregroundStyle(.white)
-                Text("Your reservation is confirmed").foregroundStyle(Color(white: 0.35)).font(.subheadline)
+                Text("Confirmed")
+                    .font(.title.weight(.semibold))
+                    .foregroundStyle(.white)
+                Text("Your reservation is confirmed")
+                    .font(.subheadline)
+                    .foregroundStyle(Color(white: 0.45))
 
                 VStack(spacing: 12) {
                     Text(venue.name).font(.title2.weight(.black)).foregroundStyle(Color(hex: venue.accentColorHex)).tracking(3)
                     Text("\(date) · \(partySize) guests").foregroundStyle(Color(white: 0.4)).font(.subheadline)
 
                     VStack(spacing: 4) {
-                        Text("CONFIRMATION CODE")
-                            .font(.system(size: 10)).foregroundStyle(Color(white: 0.3)).tracking(2)
+                        Text("Code")
+                            .font(.caption)
+                            .foregroundStyle(Color(white: 0.4))
                         Text(confirmCode)
-                            .font(.system(size: 28, weight: .black)).foregroundStyle(.white).tracking(6)
+                            .font(.title2.weight(.bold))
+                            .foregroundStyle(.white)
+                            .tracking(4)
                     }
                     .padding(16)
                     .frame(maxWidth: .infinity)
@@ -291,11 +301,13 @@ struct BookingSuccessView: View {
 
                 VStack(spacing: 12) {
                     NavigationLink(destination: MyBookingsView()) {
-                        Text("View My Bookings")
-                            .font(.subheadline.bold()).tracking(1).textCase(.uppercase).foregroundStyle(.black)
-                            .frame(maxWidth: .infinity).padding(.vertical, 16)
+                        Text("View reservations")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.black)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
                             .background(Color(hex: venue.accentColorHex))
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                 }
                 .padding(.horizontal, 20)

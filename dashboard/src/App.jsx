@@ -20,7 +20,7 @@ export default function App() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#080808] text-white md:flex-row">
+    <div className="flex min-h-screen flex-col bg-[var(--bg-base)] text-[var(--text-primary)] md:flex-row">
       <Sidebar activePage={activePage} onNavigate={setActivePage} />
       <main className="flex-1 overflow-y-auto">
         {pages[activePage] || <DashboardHome />}

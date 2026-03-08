@@ -11,28 +11,33 @@ struct MyBookingsView: View {
                 Color.black.ignoresSafeArea()
 
                 VStack(alignment: .leading, spacing: 0) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("My Reservations")
-                            .font(.system(size: 26, weight: .black))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Reservations")
+                            .font(.title2.weight(.semibold))
                             .foregroundStyle(.white)
                         Text("\(bookings.count) upcoming")
-                            .foregroundStyle(Color(white: 0.35))
                             .font(.subheadline)
+                            .foregroundStyle(Color(white: 0.45))
                     }
                     .padding(.horizontal, 20)
                     .padding(.vertical, 16)
 
                     if bookings.isEmpty {
-                        VStack(spacing: 16) {
-                            Text("🗓️").font(.system(size: 48))
-                            Text("No reservations yet").foregroundStyle(Color(white: 0.35)).font(.body)
+                        VStack(spacing: 20) {
+                            Image(systemName: "calendar.badge.plus")
+                                .font(.system(size: 44))
+                                .foregroundStyle(Color(white: 0.3))
+                            Text("No reservations yet")
+                                .font(.subheadline)
+                                .foregroundStyle(Color(white: 0.45))
                             NavigationLink(destination: DiscoverView()) {
-                                Text("Find a Club")
-                                    .font(.subheadline.bold())
+                                Text("Find venues")
+                                    .font(.subheadline.weight(.semibold))
                                     .foregroundStyle(.black)
-                                    .padding(.horizontal, 24).padding(.vertical, 12)
-                                    .background(Color(hex: "#C9A84C"))
-                                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 12)
+                                    .background(Color("Gold"))
+                                    .clipShape(RoundedRectangle(cornerRadius: 10))
                             }
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -127,28 +132,30 @@ struct OwnerDashboardView: View {
                     VStack(alignment: .leading, spacing: 0) {
 
                         // Header
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Owner View")
-                                .font(.caption.bold()).foregroundStyle(Color(white: 0.3)).tracking(2).textCase(.uppercase)
-                            Text("NOIR Dashboard")
-                                .font(.system(size: 24, weight: .black)).foregroundStyle(.white)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Dashboard")
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(Color(white: 0.45))
+                            Text("NOIR")
+                                .font(.title2.weight(.semibold))
+                                .foregroundStyle(.white)
                             Text("\(headerDateText) · Tonight")
-                                .foregroundStyle(Color(white: 0.35)).font(.subheadline)
+                                .font(.subheadline)
+                                .foregroundStyle(Color(white: 0.4))
                         }
                         .padding(.horizontal, 20)
                         .padding(.vertical, 16)
 
                         // Stats Grid
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                            OwnerStatCard(icon: "📋", label: "Reservations", value: "24", color: Color(hex: "#C9A84C"), sub: "+6 vs last Sat")
-                            OwnerStatCard(icon: "💰", label: "Projected Revenue", value: "$18.4K", color: .green, sub: "+12% vs last Sat")
-                            OwnerStatCard(icon: "🪑", label: "Tables Booked", value: "6/8", color: Color(hex: "#818CF8"), sub: "2 available")
-                            OwnerStatCard(icon: "🎤", label: "Promoters Active", value: "4", color: Color(hex: "#F472B6"), sub: "3 online now")
+                            OwnerStatCard(systemImage: "list.bullet.rectangle", label: "Reservations", value: "24", color: Color("Gold"), sub: "+6 vs last Sat")
+                            OwnerStatCard(systemImage: "dollarsign", label: "Revenue", value: "$18.4K", color: .green, sub: "+12% vs last Sat")
+                            OwnerStatCard(systemImage: "table.furniture", label: "Tables", value: "6/8", color: Color(hex: "#818CF8"), sub: "2 available")
+                            OwnerStatCard(systemImage: "person.2", label: "Promoters", value: "4", color: Color(hex: "#F472B6"), sub: "3 online")
                         }
                         .padding(.horizontal, 20)
 
-                        // Tonight's Reservations
-                        SectionHeader(title: "Tonight's Reservations")
+                        SectionHeader(title: "Reservations")
 
                         VStack(spacing: 10) {
                             ForEach([
@@ -162,28 +169,29 @@ struct OwnerDashboardView: View {
                         }
                         .padding(.horizontal, 20)
 
-                        // Promoter Performance
-                        SectionHeader(title: "Promoter Performance")
+                        SectionHeader(title: "Promoters")
 
                         VStack(spacing: 8) {
                             ForEach([
-                                ("🏆", "DJ Marcus", 8, "$4,200"),
-                                ("⭐", "Lena V.", 6, "$3,100"),
-                                ("⭐", "Rico T.", 5, "$2,800"),
-                            ], id: \.1) { badge, name, bookings, revenue in
+                                ("crown.fill", "DJ Marcus", 8, "$4,200"),
+                                ("star.fill", "Lena V.", 6, "$3,100"),
+                                ("star.fill", "Rico T.", 5, "$2,800"),
+                            ], id: \.1) { symbol, name, bookings, revenue in
                                 HStack(spacing: 12) {
-                                    Text(badge).font(.title2)
+                                    Image(systemName: symbol)
+                                        .font(.subheadline)
+                                        .foregroundStyle(Color("Gold"))
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text(name).font(.subheadline.bold()).foregroundStyle(.white)
-                                        Text("\(bookings) bookings tonight").font(.caption).foregroundStyle(Color(white: 0.35))
+                                        Text(name).font(.subheadline.weight(.semibold)).foregroundStyle(.white)
+                                        Text("\(bookings) bookings").font(.caption).foregroundStyle(Color(white: 0.4))
                                     }
                                     Spacer()
-                                    Text(revenue).font(.subheadline.bold()).foregroundStyle(.green)
+                                    Text(revenue).font(.subheadline.weight(.semibold)).foregroundStyle(.green)
                                 }
-                                .padding(14)
-                                .background(Color(white: 0.04))
-                                .clipShape(RoundedRectangle(cornerRadius: 14))
-                                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(white: 0.08)))
+                                .padding(12)
+                                .background(Color(white: 0.05))
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(white: 0.1), lineWidth: 1))
                             }
                         }
                         .padding(.horizontal, 20)
@@ -197,27 +205,48 @@ struct OwnerDashboardView: View {
 }
 
 struct OwnerStatCard: View {
-    let icon: String; let label: String; let value: String; let color: Color; let sub: String
+    let systemImage: String
+    let label: String
+    let value: String
+    let color: Color
+    let sub: String
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(icon).font(.title2)
-            Text(value).font(.title2.bold()).foregroundStyle(color)
-            Text(label).font(.system(size: 10)).foregroundStyle(Color(white: 0.35)).textCase(.uppercase).tracking(0.5)
-            Text(sub).font(.system(size: 9)).foregroundStyle(Color(white: 0.2))
+        VStack(alignment: .leading, spacing: 6) {
+            Image(systemName: systemImage)
+                .font(.subheadline)
+                .foregroundStyle(color)
+            Text(value)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(color)
+            Text(label)
+                .font(.system(size: 11))
+                .foregroundStyle(Color(white: 0.4))
+            Text(sub)
+                .font(.system(size: 10))
+                .foregroundStyle(Color(white: 0.3))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(Color(white: 0.04))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(white: 0.08)))
+        .padding(14)
+        .background(Color(white: 0.05))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(white: 0.1), lineWidth: 1))
     }
 }
 
 struct OwnerBookingRow: View {
-    let name: String; let table: String; let time: String; let party: Int; let spend: String; let confirmed: Bool
+    let name: String
+    let table: String
+    let time: String
+    let party: Int
+    let spend: String
+    let confirmed: Bool
+
     var body: some View {
         HStack(spacing: 12) {
-            Circle().fill(Color(white: 0.1)).frame(width: 36, height: 36).overlay(Text("👤").font(.body))
+            Image(systemName: "person.circle.fill")
+                .font(.title2)
+                .foregroundStyle(Color(white: 0.3))
             VStack(alignment: .leading, spacing: 2) {
                 Text(name).font(.subheadline.bold()).foregroundStyle(.white)
                 Text("\(table) · \(time) · \(party) ppl").font(.caption).foregroundStyle(Color(white: 0.35))
@@ -244,8 +273,11 @@ struct SectionHeader: View {
     let title: String
     var body: some View {
         Text(title)
-            .font(.caption.bold()).foregroundStyle(Color(white: 0.3)).tracking(2).textCase(.uppercase)
-            .padding(.horizontal, 20).padding(.top, 20).padding(.bottom, 10)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Color(white: 0.45))
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
+            .padding(.bottom, 8)
     }
 }
 

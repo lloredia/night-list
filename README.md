@@ -2,7 +2,12 @@
 
 > **Get On The List.**
 
-Night List is a two-sided nightlife booking platform — giving club owners and promoters a powerful management dashboard, and guests a premium visual table booking experience.
+Night List is a two-sided nightlife booking platform.
+
+| Who | Experience |
+|-----|------------|
+| **Owners** | **Web app** — manage venues, bookings, floor plans, and promoters in the browser. |
+| **Users (guests)** | **Phone app** — discover venues, view floor plans, and reserve tables on iOS. |
 
 ---
 
@@ -10,31 +15,32 @@ Night List is a two-sided nightlife booking platform — giving club owners and 
 
 ```
 night-list/
-├── prototype/          # Interactive React UI prototype (run in browser)
-├── ios/                # SwiftUI iOS app — NightList.app
-└── dashboard/          # React web app — Owner & Promoter dashboard
+├── dashboard/          # Web app — Owner & Promoter dashboard (React + Vite)
+├── ios/                # Phone app — Guest experience (SwiftUI, NightList.app)
+└── prototype/          # Early React UI prototype (browser)
 ```
 
 ---
 
 ## Getting Started
 
-### Prototype (React)
-Open `prototype/NightListPrototype.jsx` in any React sandbox (Claude.ai, CodeSandbox, StackBlitz) or drop into a Vite project.
-
-### iOS App (SwiftUI)
-```bash
-cd ios
-open NightList.xcodeproj
-```
-Requires Xcode 15+ and iOS 17+ SDK.
-
-### Owner Dashboard (React + Vite)
+### Owners — Web app (dashboard)
 ```bash
 cd dashboard
 npm install
 npm run dev
 ```
+Open the URL (e.g. http://localhost:5173) to manage venues, bookings, and promoters.
+
+### Users — Phone app (iOS)
+```bash
+cd ios
+open NightList.xcodeproj
+```
+Build and run in Xcode (iOS 17+). Guests use this app to discover venues and reserve tables.
+
+### Prototype
+Open `prototype/NightListPrototype.jsx` in a React sandbox (CodeSandbox, StackBlitz) for early UI reference.
 
 ---
 

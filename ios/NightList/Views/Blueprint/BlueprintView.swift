@@ -21,80 +21,102 @@ struct BlueprintView: View {
             VStack(spacing: 0) {
 
                 // Header
-                HStack {
+                HStack(alignment: .center) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("\(venue.name) · Floor Plan")
-                            .font(.headline)
+                        Text(venue.name)
+                            .font(.headline.weight(.semibold))
                             .foregroundStyle(.white)
-                        Text("Tap a table to see details")
-                            .font(.caption)
-                            .foregroundStyle(Color(white: 0.35))
+                        Text("Floor plan")
+                            .font(.subheadline)
+                            .foregroundStyle(Color(white: 0.45))
                     }
                     Spacer()
-                    Text("\(availableCount) Available")
-                        .font(.caption.bold())
-                        .foregroundStyle(.green)
-                        .padding(.horizontal, 10).padding(.vertical, 5)
-                        .background(.green.opacity(0.12))
-                        .clipShape(Capsule())
+                    HStack(spacing: 6) {
+                        Image(systemName: "table.furniture")
+                            .font(.caption2)
+                        Text("\(availableCount) available")
+                            .font(.subheadline.weight(.medium))
+                    }
+                    .foregroundStyle(.green)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.green.opacity(0.15))
+                    .clipShape(Capsule())
                 }
                 .padding(.horizontal, 20)
-                .padding(.vertical, 12)
+                .padding(.top, 12)
+                .padding(.bottom, 10)
 
                 // Legend
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
+                    HStack(spacing: 16) {
                         ForEach(VenueTable.TableType.allCases, id: \.self) { type in
-                            HStack(spacing: 5) {
-                                RoundedRectangle(cornerRadius: 3)
-                                    .fill(type.color)
-                                    .frame(width: 10, height: 10)
+                            HStack(spacing: 6) {
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(type.color.opacity(0.9))
+                                    .frame(width: 12, height: 12)
                                 Text(type.label)
-                                    .font(.system(size: 10))
-                                    .foregroundStyle(Color(white: 0.4))
+                                    .font(.caption)
+                                    .foregroundStyle(Color(white: 0.5))
                             }
                         }
-                        HStack(spacing: 5) {
-                            RoundedRectangle(cornerRadius: 3)
-                                .fill(Color(white: 0.15))
-                                .frame(width: 10, height: 10)
-                            Text("Unavailable")
-                                .font(.system(size: 10))
-                                .foregroundStyle(Color(white: 0.4))
+                        HStack(spacing: 6) {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color(white: 0.2))
+                                .frame(width: 12, height: 12)
+                            Text("Booked")
+                                .font(.caption)
+                                .foregroundStyle(Color(white: 0.5))
                         }
                     }
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(Color(white: 0.06))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
-                .padding(.bottom, 8)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 12)
 
                 // Blueprint Canvas
                 GeometryReader { geo in
                     ZStack {
-                        // Background grid
-                        BlueprintGrid()
+                        // Floor background + grid
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color(white: 0.06))
+                            .overlay(BlueprintGrid())
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
 
                         // Stage
-                        VStack(spacing: 2) {
-                            Text("🎵 Stage / DJ")
-                                .font(.system(size: 9))
-                                .foregroundStyle(Color(white: 0.3))
-                                .tracking(2)
+                        HStack(spacing: 8) {
+                            Image(systemName: "waveform")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(Color(white: 0.5))
+                            Text("Stage")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Color(white: 0.6))
                         }
-                        .frame(width: 160, height: 30)
-                        .background(Color(white: 0.07))
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(white: 0.15)))
-                        .position(x: geo.size.width / 2, y: 30)
+                        .frame(width: 140, height: 36)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color(white: 0.09))
+                                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(white: 0.14), lineWidth: 1))
+                        )
+                        .position(x: geo.size.width / 2, y: 32)
 
-                        // Dance Floor
-                        Text("DANCE FLOOR")
-                            .font(.system(size: 8))
-                            .foregroundStyle(Color(white: 0.2))
-                            .tracking(2)
-                            .frame(width: 120, height: 35)
-                            .background(Color.white.opacity(0.02))
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(white: 0.1), style: StrokeStyle(dash: [4])))
-                            .position(x: geo.size.width / 2, y: 80)
+                        // Dance floor
+                        Text("Dance floor")
+                            .font(.caption)
+                            .foregroundStyle(Color(white: 0.25))
+                            .frame(width: 110, height: 40)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(Color.white.opacity(0.03))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .strokeBorder(Color(white: 0.12), style: StrokeStyle(lineWidth: 1, dash: [6, 4]))
+                                    )
+                            )
+                            .position(x: geo.size.width / 2, y: 78)
 
                         // Tables
                         ForEach(venue.tables) { table in
@@ -109,17 +131,23 @@ struct BlueprintView: View {
                         }
 
                         // Bar
-                        Text("🍸  MAIN BAR")
-                            .font(.system(size: 10))
-                            .foregroundStyle(Color(hex: "#0891B2"))
-                            .tracking(3)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 28)
-                            .background(Color(hex: "#050d12"))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(hex: "#0891B2").opacity(0.3)))
-                            .padding(.horizontal, 16)
-                            .position(x: geo.size.width / 2, y: geo.size.height - 24)
+                        HStack(spacing: 8) {
+                            Image(systemName: "wineglass.fill")
+                                .font(.system(size: 12))
+                                .foregroundStyle(Color(hex: "#0891B2").opacity(0.9))
+                            Text("Bar")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Color(hex: "#0891B2").opacity(0.9))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 32)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color(hex: "#0a1218"))
+                                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(hex: "#0891B2").opacity(0.35), lineWidth: 1))
+                        )
+                        .padding(.horizontal, 20)
+                        .position(x: geo.size.width / 2, y: geo.size.height - 28)
                     }
                     .scaleEffect(scale)
                     .offset(offset)
@@ -133,9 +161,9 @@ struct BlueprintView: View {
                             }
                     )
                 }
-                .background(Color(white: 0.04))
+                .background(Color(white: 0.08))
                 .clipShape(RoundedRectangle(cornerRadius: 20))
-                .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color(white: 0.08)))
+                .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color(white: 0.12), lineWidth: 1))
                 .padding(.horizontal, 16)
                 .padding(.bottom, 20)
             }
@@ -165,33 +193,56 @@ struct TableNode: View {
     let isSelected: Bool
 
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 10)
-                .fill(table.isAvailable ? table.type.color.opacity(0.15) : Color(white: 0.08))
+        ZStack(alignment: .topTrailing) {
+            // Table shape
+            RoundedRectangle(cornerRadius: 8)
+                .fill(
+                    table.isAvailable
+                        ? table.type.color.opacity(0.18)
+                        : LinearGradient(colors: [Color(white: 0.1), Color(white: 0.07)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                )
                 .frame(width: table.layoutWidth, height: table.layoutHeight)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(table.isAvailable ? table.type.color : Color(white: 0.15), lineWidth: isSelected ? 2.5 : 1.5)
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(
+                            table.isAvailable ? table.type.color : Color(white: 0.18),
+                            lineWidth: isSelected ? 2.5 : 1
+                        )
                 )
-                .shadow(color: table.isAvailable ? table.type.color.opacity(0.3) : .clear, radius: 8)
+                .shadow(color: table.isAvailable ? table.type.color.opacity(0.25) : .clear, radius: isSelected ? 12 : 6)
+                .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
 
             if table.isAvailable {
-                VStack(spacing: 2) {
-                    Text(table.label).font(.system(size: 8, weight: .bold)).foregroundStyle(table.type.color).multilineTextAlignment(.center)
-                    Text("$\(table.price)").font(.system(size: 7)).foregroundStyle(table.type.color.opacity(0.7))
+                VStack(spacing: 1) {
+                    Text(table.label)
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(1)
+                    Text("$\(table.price)")
+                        .font(.system(size: 8, weight: .medium))
+                        .foregroundStyle(table.type.color)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                Text("🔒").font(.system(size: 14))
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color(white: 0.35))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
 
-            if let _ = table.promoText, table.isAvailable {
-                Circle().fill(Color(hex: "#C9A84C")).frame(width: 14, height: 14)
-                    .overlay(Text("🎁").font(.system(size: 7)))
-                    .offset(x: table.layoutWidth / 2 - 4, y: -table.layoutHeight / 2 + 4)
+            // Promo indicator
+            if table.promoText != nil, table.isAvailable {
+                Image(systemName: "tag.fill")
+                    .font(.system(size: 7))
+                    .foregroundStyle(Color("Gold"))
+                    .frame(width: 14, height: 14)
+                    .background(Circle().fill(Color.black.opacity(0.6)))
+                    .offset(x: 4, y: -4)
             }
         }
-        .scaleEffect(isSelected ? 1.08 : 1.0)
-        .animation(.spring(response: 0.3), value: isSelected)
+        .scaleEffect(isSelected ? 1.06 : 1.0)
+        .animation(.spring(response: 0.25, dampingFraction: 0.7), value: isSelected)
     }
 }
 
@@ -199,14 +250,22 @@ struct TableNode: View {
 struct BlueprintGrid: View {
     var body: some View {
         Canvas { context, size in
-            let spacing: CGFloat = 20
-            context.opacity = 0.06
+            let spacing: CGFloat = 24
+            context.opacity = 0.04
             var path = Path()
             var x: CGFloat = 0
-            while x <= size.width { path.move(to: CGPoint(x: x, y: 0)); path.addLine(to: CGPoint(x: x, y: size.height)); x += spacing }
+            while x <= size.width {
+                path.move(to: CGPoint(x: x, y: 0))
+                path.addLine(to: CGPoint(x: x, y: size.height))
+                x += spacing
+            }
             var y: CGFloat = 0
-            while y <= size.height { path.move(to: CGPoint(x: 0, y: y)); path.addLine(to: CGPoint(x: size.width, y: y)); y += spacing }
-            context.stroke(path, with: .color(Color(hex: "#C9A84C")), lineWidth: 0.5)
+            while y <= size.height {
+                path.move(to: CGPoint(x: 0, y: y))
+                path.addLine(to: CGPoint(x: size.width, y: y))
+                y += spacing
+            }
+            context.stroke(path, with: .color(Color(white: 0.5)), lineWidth: 0.5)
         }
     }
 }
