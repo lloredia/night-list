@@ -7,11 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		79302B172F5E234B00FE1DCC /* BookingViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79302B162F5E234B00FE1DCC /* BookingViews.swift */; };
 		A10000000000000000000001 /* NightListApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* NightListApp.swift */; };
 		A10000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* ContentView.swift */; };
 		A10000000000000000000003 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* Models.swift */; };
 		A10000000000000000000004 /* BlueprintView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* BlueprintView.swift */; };
-		A10000000000000000000005 /* BookingViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* BookingViews.swift */; };
 		A10000000000000000000006 /* DiscoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* DiscoverView.swift */; };
 		A10000000000000000000007 /* DashboardViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* DashboardViews.swift */; };
 		A10000000000000000000008 /* VenueDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* VenueDetailView.swift */; };
@@ -19,12 +19,14 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		79302B142F5E195400FE1DCC /* NightList.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NightList.entitlements; sourceTree = "<group>"; };
+		79302B152F5E221800FE1DCC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		79302B162F5E234B00FE1DCC /* BookingViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookingViews.swift; sourceTree = "<group>"; };
 		A20000000000000000000000 /* NightList.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NightList.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A20000000000000000000001 /* NightListApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NightListApp.swift; sourceTree = "<group>"; };
 		A20000000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A20000000000000000000003 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		A20000000000000000000004 /* BlueprintView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlueprintView.swift; sourceTree = "<group>"; };
-		A20000000000000000000005 /* BookingViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookingViews.swift; sourceTree = "<group>"; };
 		A20000000000000000000006 /* DiscoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverView.swift; sourceTree = "<group>"; };
 		A20000000000000000000007 /* DashboardViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViews.swift; sourceTree = "<group>"; };
 		A20000000000000000000008 /* VenueDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VenueDetailView.swift; sourceTree = "<group>"; };
@@ -53,6 +55,8 @@
 		A40000000000000000000002 /* NightList */ = {
 			isa = PBXGroup;
 			children = (
+				79302B152F5E221800FE1DCC /* Info.plist */,
+				79302B142F5E195400FE1DCC /* NightList.entitlements */,
 				A20000000000000000000009 /* Assets.xcassets */,
 				A20000000000000000000001 /* NightListApp.swift */,
 				A20000000000000000000002 /* ContentView.swift */,
@@ -101,7 +105,7 @@
 		A40000000000000000000007 /* Booking */ = {
 			isa = PBXGroup;
 			children = (
-				A20000000000000000000005 /* BookingViews.swift */,
+				79302B162F5E234B00FE1DCC /* BookingViews.swift */,
 			);
 			path = Booking;
 			sourceTree = "<group>";
@@ -198,7 +202,7 @@
 				A10000000000000000000002 /* ContentView.swift in Sources */,
 				A10000000000000000000003 /* Models.swift in Sources */,
 				A10000000000000000000004 /* BlueprintView.swift in Sources */,
-				A10000000000000000000005 /* BookingViews.swift in Sources */,
+				79302B172F5E234B00FE1DCC /* BookingViews.swift in Sources */,
 				A10000000000000000000006 /* DiscoverView.swift in Sources */,
 				A10000000000000000000007 /* DashboardViews.swift in Sources */,
 				A10000000000000000000008 /* VenueDetailView.swift in Sources */,
@@ -322,12 +326,19 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"ASSETCATALOG_COMPILER_APPICON_NAME[sdk=iphoneos*]" = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = NightList/NightList.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = 9PA8UUDBKH;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = NightList/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Night List";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -351,12 +362,19 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"ASSETCATALOG_COMPILER_APPICON_NAME[sdk=iphoneos*]" = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = NightList/NightList.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = 9PA8UUDBKH;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = NightList/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Night List";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
