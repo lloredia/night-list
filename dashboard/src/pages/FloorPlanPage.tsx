@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 interface Table {
   id: string;
   label: string;
-  type: "vip" | "premium" | "booth" | "bar" | "couch";
+  type: "vip" | "premium" | "booth" | "bar";
   x: number;
   y: number;
   w: number;
@@ -71,7 +71,6 @@ const typeColors: Record<TableType, { fill: string; border: string; text: string
   premium: { fill: "rgba(124,58,237,0.15)", border: "#7C3AED", text: "#A78BFA", label: "Premium" },
   booth: { fill: "rgba(5,150,105,0.15)", border: "#059669", text: "#34D399", label: "Booth" },
   bar: { fill: "rgba(8,145,178,0.15)", border: "#0891B2", text: "#22D3EE", label: "Bar" },
-  couch: { fill: "rgba(249,115,22,0.16)", border: "#F97316", text: "#FDBA74", label: "Couch" },
 };
 
 export default function FloorPlanPage() {
@@ -401,7 +400,6 @@ export default function FloorPlanPage() {
             {tables.map((table) => {
               const colors = typeColors[table.type];
               const isSelected = selectedTableId === table.id;
-              const isCouch = table.type === "couch";
               return (
                 <div
                   key={table.id}
@@ -428,36 +426,6 @@ export default function FloorPlanPage() {
                 >
                   {table.available ? (
                     <>
-                      {isCouch && (
-                        <>
-                          <div
-                            className="pointer-events-none absolute left-1.5 right-1.5 rounded-t-lg"
-                            style={{
-                              top: 3,
-                              height: Math.max(7, Math.min(12, table.h * 0.23)),
-                              background: `linear-gradient(to bottom, ${colors.border}AA, ${colors.border}66)`,
-                            }}
-                          />
-                          <div
-                            className="pointer-events-none absolute left-2 rounded-md"
-                            style={{
-                              top: 6,
-                              width: Math.max(8, Math.min(14, table.w * 0.14)),
-                              bottom: 6,
-                              background: `${colors.border}40`,
-                            }}
-                          />
-                          <div
-                            className="pointer-events-none absolute right-2 rounded-md"
-                            style={{
-                              top: 6,
-                              width: Math.max(8, Math.min(14, table.w * 0.14)),
-                              bottom: 6,
-                              background: `${colors.border}40`,
-                            }}
-                          />
-                        </>
-                      )}
                       <span className="text-[10px] font-bold" style={{ color: colors.text }}>
                         {table.label}
                       </span>
@@ -689,7 +657,6 @@ function tableTypeColors(type: string): string {
     premium: "text-purple-400 bg-purple-400/10 border-purple-400/20",
     booth: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
     bar: "text-cyan-400 bg-cyan-400/10 border-cyan-400/20",
-    couch: "text-orange-300 bg-orange-400/10 border-orange-400/20",
   };
   return map[type] || "";
 }
@@ -773,7 +740,10 @@ function loadStoredLayout(): { tables: Table[]; fixtures: Fixture[] } {
 
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
-      const legacyTables = parsed.filter(isStoredTable).map((table) => normalizeTable(table));
+      const legacyTables = parsed
+        .map(coerceStoredTable)
+        .filter((table): table is Table => table !== null)
+        .map((table) => normalizeTable(table));
       return {
         tables: legacyTables.length > 0 ? legacyTables : initialTables,
         fixtures: initialFixtures,
@@ -787,7 +757,10 @@ function loadStoredLayout(): { tables: Table[]; fixtures: Fixture[] } {
     const tableList = Array.isArray(parsed.tables) ? parsed.tables : [];
     const fixtureList = Array.isArray(parsed.fixtures) ? parsed.fixtures : [];
 
-    const loadedTables = tableList.filter(isStoredTable).map((table) => normalizeTable(table));
+    const loadedTables = tableList
+      .map(coerceStoredTable)
+      .filter((table): table is Table => table !== null)
+      .map((table) => normalizeTable(table));
     const loadedFixtures = fixtureList.filter(isStoredFixture).map((fixture) => normalizeFixture(fixture));
 
     return {
@@ -800,30 +773,48 @@ function loadStoredLayout(): { tables: Table[]; fixtures: Fixture[] } {
 }
 
 function isTableType(value: unknown): value is TableType {
-  return value === "vip" || value === "premium" || value === "booth" || value === "bar" || value === "couch";
+  return value === "vip" || value === "premium" || value === "booth" || value === "bar";
 }
 
 function isFixtureType(value: unknown): value is FixtureType {
   return value === "stage" || value === "dance" || value === "bar";
 }
 
-function isStoredTable(item: unknown): item is Table {
-  if (!item || typeof item !== "object") return false;
+function coerceStoredTable(item: unknown): Table | null {
+  if (!item || typeof item !== "object") return null;
 
   const value = item as Record<string, unknown>;
+  const rawType = value.type;
+  const mappedType =
+    rawType === "couch" ? "booth" : rawType;
 
-  return (
-    typeof value.id === "string" &&
-    typeof value.label === "string" &&
-    isTableType(value.type) &&
-    typeof value.x === "number" &&
-    typeof value.y === "number" &&
-    typeof value.w === "number" &&
-    typeof value.h === "number" &&
-    typeof value.price === "number" &&
-    typeof value.capacity === "number" &&
-    typeof value.available === "boolean"
-  );
+  if (
+    typeof value.id !== "string" ||
+    typeof value.label !== "string" ||
+    !isTableType(mappedType) ||
+    typeof value.x !== "number" ||
+    typeof value.y !== "number" ||
+    typeof value.w !== "number" ||
+    typeof value.h !== "number" ||
+    typeof value.price !== "number" ||
+    typeof value.capacity !== "number" ||
+    typeof value.available !== "boolean"
+  ) {
+    return null;
+  }
+
+  return {
+    id: value.id,
+    label: value.label,
+    type: mappedType,
+    x: value.x,
+    y: value.y,
+    w: value.w,
+    h: value.h,
+    price: value.price,
+    capacity: value.capacity,
+    available: value.available,
+  };
 }
 
 function isStoredFixture(item: unknown): item is Fixture {

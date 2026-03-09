@@ -89,7 +89,10 @@ struct BlueprintView: View {
                 .padding(.bottom, 12)
 
                 // ── Blueprint Canvas ─────────────────────────────────
+                // Coordinate reference: 460 × 440 (matches web dashboard canvas).
                 GeometryReader { geo in
+                    let scaleX = geo.size.width / 460
+                    let scaleY = geo.size.height / 440
                     ZStack {
                         RoundedRectangle(cornerRadius: 20)
                             .fill(Color(white: 0.04))
@@ -97,7 +100,7 @@ struct BlueprintView: View {
                         BlueprintGrid()
                             .clipShape(RoundedRectangle(cornerRadius: 20))
 
-                        // Stage
+                        // Stage  (web ref: x:140, y:16, w:180, h:48 → center y:40)
                         VStack(spacing: 4) {
                             Image(systemName: "waveform")
                                 .font(.system(size: 12))
@@ -106,31 +109,35 @@ struct BlueprintView: View {
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(.white.opacity(0.4))
                         }
-                        .frame(width: 150, height: 44)
+                        .frame(width: 180 * scaleX, height: 44)
                         .background(.white.opacity(0.04))
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                         .overlay(RoundedRectangle(cornerRadius: 12).stroke(.white.opacity(0.08), lineWidth: 1))
-                        .position(x: geo.size.width / 2, y: 36)
+                        .position(x: geo.size.width / 2, y: 40 * scaleY)
 
-                        // Dance Floor
+                        // Dance Floor  (web ref: x:160, y:76, w:140, h:40 → center y:96)
                         Text("Dance Floor")
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(.white.opacity(0.18))
-                            .frame(width: 110, height: 32)
+                            .frame(width: 140 * scaleX, height: 32)
                             .overlay(RoundedRectangle(cornerRadius: 8).stroke(.white.opacity(0.08), style: StrokeStyle(dash: [4, 3])))
-                            .position(x: geo.size.width / 2, y: 92)
+                            .position(x: geo.size.width / 2, y: 96 * scaleY)
 
                         // Tables
                         ForEach(Array(venue.tables.enumerated()), id: \.element.id) { index, table in
+                            let sw = table.layoutWidth * scaleX
+                            let sh = table.layoutHeight * scaleY
                             TableNodeView(
                                 table: table,
+                                scaledWidth: sw,
+                                scaledHeight: sh,
                                 isSelected: selectedTable?.id == table.id,
                                 animateIn: animateIn,
                                 index: index
                             )
                             .position(
-                                x: table.layoutX + table.layoutWidth / 2,
-                                y: table.layoutY + table.layoutHeight / 2
+                                x: table.layoutX * scaleX + sw / 2,
+                                y: table.layoutY * scaleY + sh / 2
                             )
                             .onTapGesture {
                                 guard table.isAvailable else { return }
@@ -284,6 +291,8 @@ struct InfoRow: View {
 // MARK: - Table Node
 struct TableNodeView: View {
     let table: VenueTable
+    let scaledWidth: CGFloat
+    let scaledHeight: CGFloat
     let isSelected: Bool
     let animateIn: Bool
     let index: Int
@@ -298,7 +307,7 @@ struct TableNodeView: View {
             if table.isAvailable {
                 RoundedRectangle(cornerRadius: 12)
                     .fill(color.opacity(pulse ? 0.2 : 0.08))
-                    .frame(width: table.layoutWidth + 10, height: table.layoutHeight + 10)
+                    .frame(width: scaledWidth + 10, height: scaledHeight + 10)
                     .blur(radius: 8)
                     .scaleEffect(pulse ? 1.06 : 1.0)
                     .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: pulse)
@@ -307,7 +316,7 @@ struct TableNodeView: View {
             // Table body
             RoundedRectangle(cornerRadius: 12)
                 .fill(table.isAvailable ? color.opacity(0.13) : Color.white.opacity(0.03))
-                .frame(width: table.layoutWidth, height: table.layoutHeight)
+                .frame(width: scaledWidth, height: scaledHeight)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(
@@ -332,7 +341,7 @@ struct TableNodeView: View {
                         .font(.system(size: 8, weight: .semibold))
                         .foregroundStyle(color.opacity(0.65))
                 }
-                .frame(width: table.layoutWidth - 8)
+                .frame(width: scaledWidth - 8)
             } else {
                 Image(systemName: "lock.fill")
                     .font(.system(size: 12))
@@ -346,7 +355,7 @@ struct TableNodeView: View {
                     .frame(width: 10, height: 10)
                     .overlay(Circle().stroke(Color.black, lineWidth: 1.5))
                     .shadow(color: Color(hex: "#C9A84C").opacity(0.9), radius: 5)
-                    .offset(x: table.layoutWidth / 2 - 4, y: -table.layoutHeight / 2 + 4)
+                    .offset(x: scaledWidth / 2 - 4, y: -scaledHeight / 2 + 4)
             }
         }
         .scaleEffect(isSelected ? 1.09 : (animateIn ? 1.0 : 0.5))

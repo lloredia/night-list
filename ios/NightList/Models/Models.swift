@@ -66,11 +66,17 @@ struct VenueTable: Identifiable, Codable {
         var label: String { rawValue.capitalized }
     }
 
+    // Layout coordinates use a 460×440 reference canvas (matches the web dashboard).
+    // BlueprintView scales these to fit the device screen at runtime.
     static let mockTables: [VenueTable] = [
-        VenueTable(id: UUID(), label: "VIP 1", type: .vip, price: 1200, capacity: 8, isAvailable: true, promoText: "4 ppl in free", minBottles: 2, dressCode: "No sneakers", arrivalDeadline: "11PM", layoutX: 60, layoutY: 80, layoutWidth: 70, layoutHeight: 50),
-        VenueTable(id: UUID(), label: "VIP 2", type: .vip, price: 1500, capacity: 10, isAvailable: false, promoText: nil, minBottles: 3, dressCode: "No sneakers", arrivalDeadline: "10:30PM", layoutX: 200, layoutY: 80, layoutWidth: 70, layoutHeight: 50),
-        VenueTable(id: UUID(), label: "Section A", type: .premium, price: 600, capacity: 6, isAvailable: true, promoText: "2 for 1 mixers", minBottles: 1, dressCode: "Smart casual", arrivalDeadline: "11:30PM", layoutX: 60, layoutY: 180, layoutWidth: 55, layoutHeight: 45),
-        VenueTable(id: UUID(), label: "Booth 1", type: .booth, price: 400, capacity: 5, isAvailable: true, promoText: "4 ppl in free", minBottles: 1, dressCode: "Smart casual", arrivalDeadline: "11PM", layoutX: 200, layoutY: 260, layoutWidth: 50, layoutHeight: 40),
+        VenueTable(id: UUID(), label: "VIP 1",     type: .vip,     price: 1200, capacity: 8,  isAvailable: true,  promoText: "4 ppl in free",  minBottles: 2, dressCode: "No sneakers",  arrivalDeadline: "11PM",    layoutX: 80,  layoutY: 100, layoutWidth: 90, layoutHeight: 60),
+        VenueTable(id: UUID(), label: "VIP 2",     type: .vip,     price: 1500, capacity: 10, isAvailable: false, promoText: nil,               minBottles: 3, dressCode: "No sneakers",  arrivalDeadline: "10:30PM", layoutX: 260, layoutY: 100, layoutWidth: 90, layoutHeight: 60),
+        VenueTable(id: UUID(), label: "Section A", type: .premium, price: 600,  capacity: 6,  isAvailable: true,  promoText: "2 for 1 mixers",  minBottles: 1, dressCode: "Smart casual", arrivalDeadline: "11:30PM", layoutX: 80,  layoutY: 220, layoutWidth: 75, layoutHeight: 55),
+        VenueTable(id: UUID(), label: "Section B", type: .premium, price: 600,  capacity: 6,  isAvailable: true,  promoText: nil,               minBottles: 1, dressCode: "Smart casual", arrivalDeadline: "11:30PM", layoutX: 190, layoutY: 220, layoutWidth: 75, layoutHeight: 55),
+        VenueTable(id: UUID(), label: "Section C", type: .premium, price: 750,  capacity: 6,  isAvailable: false, promoText: nil,               minBottles: 2, dressCode: "Smart casual", arrivalDeadline: "11PM",    layoutX: 300, layoutY: 220, layoutWidth: 75, layoutHeight: 55),
+        VenueTable(id: UUID(), label: "Bar 1",     type: .bar,     price: 200,  capacity: 4,  isAvailable: true,  promoText: nil,               minBottles: 1, dressCode: "Casual",       arrivalDeadline: "Midnight", layoutX: 80,  layoutY: 340, layoutWidth: 60, layoutHeight: 45),
+        VenueTable(id: UUID(), label: "Bar 2",     type: .bar,     price: 200,  capacity: 4,  isAvailable: true,  promoText: nil,               minBottles: 1, dressCode: "Casual",       arrivalDeadline: "Midnight", layoutX: 160, layoutY: 340, layoutWidth: 60, layoutHeight: 45),
+        VenueTable(id: UUID(), label: "Booth 1",   type: .booth,   price: 400,  capacity: 5,  isAvailable: true,  promoText: "4 ppl in free",  minBottles: 1, dressCode: "Smart casual", arrivalDeadline: "11PM",    layoutX: 270, layoutY: 330, layoutWidth: 70, layoutHeight: 50),
     ]
 }
 
