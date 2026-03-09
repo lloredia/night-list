@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Move,
   ZoomIn,
@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 interface Table {
   id: string;
   label: string;
-  type: "vip" | "premium" | "booth" | "bar";
+  type: "vip" | "premium" | "booth" | "bar" | "couch";
   x: number;
   y: number;
   w: number;
@@ -29,6 +29,25 @@ interface Table {
   capacity: number;
   available: boolean;
 }
+
+interface Fixture {
+  id: string;
+  label: string;
+  type: "stage" | "dance" | "bar";
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+type TableType = Table["type"];
+type FixtureType = Fixture["type"];
+
+const CANVAS_WIDTH = 460;
+const CANVAS_HEIGHT = 440;
+const GRID_SIZE = 12;
+const STORAGE_KEY = "nightlist.floorplan.layout.v2";
+const LEGACY_STORAGE_KEY = "nightlist.floorplan.layout.v1";
 
 const initialTables: Table[] = [
   { id: "T1", label: "VIP 1", type: "vip", x: 80, y: 100, w: 90, h: 60, price: 1200, capacity: 8, available: true },
@@ -41,20 +60,198 @@ const initialTables: Table[] = [
   { id: "T8", label: "Booth 1", type: "booth", x: 270, y: 330, w: 70, h: 50, price: 400, capacity: 5, available: true },
 ];
 
-const typeColors: Record<string, { fill: string; border: string; text: string; label: string }> = {
+const initialFixtures: Fixture[] = [
+  { id: "F1", label: "Stage / DJ", type: "stage", x: 140, y: 16, w: 180, h: 48 },
+  { id: "F2", label: "Dance Floor", type: "dance", x: 160, y: 76, w: 140, h: 40 },
+  { id: "F3", label: "Bar", type: "bar", x: 20, y: 386, w: 420, h: 40 },
+];
+
+const typeColors: Record<TableType, { fill: string; border: string; text: string; label: string }> = {
   vip: { fill: "rgba(201,168,76,0.15)", border: "#C9A84C", text: "#C9A84C", label: "VIP" },
   premium: { fill: "rgba(124,58,237,0.15)", border: "#7C3AED", text: "#A78BFA", label: "Premium" },
   booth: { fill: "rgba(5,150,105,0.15)", border: "#059669", text: "#34D399", label: "Booth" },
   bar: { fill: "rgba(8,145,178,0.15)", border: "#0891B2", text: "#22D3EE", label: "Bar" },
+  couch: { fill: "rgba(249,115,22,0.16)", border: "#F97316", text: "#FDBA74", label: "Couch" },
 };
 
 export default function FloorPlanPage() {
-  const [tables, setTables] = useState<Table[]>(initialTables);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [initialLayout] = useState(loadStoredLayout);
+  const [tables, setTables] = useState<Table[]>(initialLayout.tables);
+  const [fixtures, setFixtures] = useState<Fixture[]>(initialLayout.fixtures);
+  const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
+  const [selectedFixtureId, setSelectedFixtureId] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
   const [showGrid, setShowGrid] = useState(true);
+  const [savedAt, setSavedAt] = useState<string | null>(null);
 
-  const selected = tables.find((t) => t.id === selectedId);
+  const canvasRef = useRef<HTMLDivElement | null>(null);
+  const dragRef = useRef<{
+    kind: "table" | "fixture";
+    id: string;
+    pointerOffsetX: number;
+    pointerOffsetY: number;
+  } | null>(null);
+
+  const selectedTable = useMemo(
+    () => tables.find((table) => table.id === selectedTableId) ?? null,
+    [tables, selectedTableId]
+  );
+  const selectedFixture = useMemo(
+    () => fixtures.find((fixture) => fixture.id === selectedFixtureId) ?? null,
+    [fixtures, selectedFixtureId]
+  );
+
+  useEffect(() => {
+    function onPointerMove(event: PointerEvent) {
+      const drag = dragRef.current;
+      if (!drag) return;
+
+      const point = pointerToCanvas(canvasRef.current, event.clientX, event.clientY);
+      if (!point) return;
+
+      if (drag.kind === "table") {
+        setTables((previous) =>
+          previous.map((table) => {
+            if (table.id !== drag.id) return table;
+
+            const nextX = snapToGrid(point.x - drag.pointerOffsetX);
+            const nextY = snapToGrid(point.y - drag.pointerOffsetY);
+            const clampedX = clamp(nextX, 0, CANVAS_WIDTH - table.w);
+            const clampedY = clamp(nextY, 0, CANVAS_HEIGHT - table.h);
+
+            if (clampedX === table.x && clampedY === table.y) return table;
+            return { ...table, x: clampedX, y: clampedY };
+          })
+        );
+      } else {
+        setFixtures((previous) =>
+          previous.map((fixture) => {
+            if (fixture.id !== drag.id) return fixture;
+
+            const nextX = snapToGrid(point.x - drag.pointerOffsetX);
+            const nextY = snapToGrid(point.y - drag.pointerOffsetY);
+            const clampedX = clamp(nextX, 0, CANVAS_WIDTH - fixture.w);
+            const clampedY = clamp(nextY, 0, CANVAS_HEIGHT - fixture.h);
+
+            if (clampedX === fixture.x && clampedY === fixture.y) return fixture;
+            return { ...fixture, x: clampedX, y: clampedY };
+          })
+        );
+      }
+    }
+
+    function onPointerUp() {
+      dragRef.current = null;
+    }
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+    };
+  }, []);
+
+  const updateSelectedTable = (patch: Partial<Table>) => {
+    if (!selectedTableId) return;
+
+    setTables((previous) =>
+      previous.map((table) => {
+        if (table.id !== selectedTableId) return table;
+        return normalizeTable({ ...table, ...patch });
+      })
+    );
+  };
+
+  const updateSelectedFixture = (patch: Partial<Fixture>) => {
+    if (!selectedFixtureId) return;
+
+    setFixtures((previous) =>
+      previous.map((fixture) => {
+        if (fixture.id !== selectedFixtureId) return fixture;
+        return normalizeFixture({ ...fixture, ...patch });
+      })
+    );
+  };
+
+  const onTablePointerDown = (table: Table, event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return;
+
+    const point = pointerToCanvas(canvasRef.current, event.clientX, event.clientY);
+    if (!point) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    setSelectedTableId(table.id);
+    setSelectedFixtureId(null);
+
+    dragRef.current = {
+      kind: "table",
+      id: table.id,
+      pointerOffsetX: point.x - table.x,
+      pointerOffsetY: point.y - table.y,
+    };
+  };
+
+  const onFixturePointerDown = (
+    fixture: Fixture,
+    event: React.PointerEvent<HTMLDivElement>
+  ) => {
+    if (event.button !== 0) return;
+
+    const point = pointerToCanvas(canvasRef.current, event.clientX, event.clientY);
+    if (!point) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    setSelectedFixtureId(fixture.id);
+    setSelectedTableId(null);
+
+    dragRef.current = {
+      kind: "fixture",
+      id: fixture.id,
+      pointerOffsetX: point.x - fixture.x,
+      pointerOffsetY: point.y - fixture.y,
+    };
+  };
+
+  const onDeleteSelected = () => {
+    if (!selectedTableId) return;
+
+    setTables((previous) => previous.filter((table) => table.id !== selectedTableId));
+    setSelectedTableId(null);
+  };
+
+  const onAddTable = () => {
+    const nextIndex = nextTableIndex(tables);
+    const type: TableType = "vip";
+
+    const newTable = normalizeTable({
+      id: `T${nextIndex}`,
+      label: `${typeColors[type].label} ${nextIndex}`,
+      type,
+      x: 36 + ((nextIndex * 20) % 260),
+      y: 120 + ((nextIndex * 16) % 220),
+      w: 84,
+      h: 56,
+      price: 500,
+      capacity: 6,
+      available: true,
+    });
+
+    setTables((previous) => [...previous, newTable]);
+    setSelectedTableId(newTable.id);
+    setSelectedFixtureId(null);
+  };
+
+  const onSaveLayout = () => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ tables, fixtures }));
+    setSavedAt(
+      new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+    );
+  };
 
   return (
     <div className="flex h-[calc(100vh-0px)] overflow-hidden">
@@ -64,7 +261,7 @@ export default function FloorPlanPage() {
         <div className="flex items-center justify-between border-b border-border bg-card/50 px-6 py-3">
           <div>
             <h1 className="text-lg font-bold text-foreground tracking-tight">Floor Plan Builder</h1>
-            <p className="text-xs text-muted-foreground">Drag tables to position. Click to configure.</p>
+            <p className="text-xs text-muted-foreground">Drag any element to position. Click to configure.</p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -90,7 +287,7 @@ export default function FloorPlanPage() {
             <button onClick={() => setZoom(1)} className="p-2 rounded-lg border border-border bg-card/50 text-muted-foreground hover:text-foreground transition-all">
               <RotateCcw className="h-4 w-4" />
             </button>
-            <MetalButton variant="gold">
+            <MetalButton variant="gold" onClick={onSaveLayout}>
               <Save className="h-4 w-4 mr-1" />
               Save Layout
             </MetalButton>
@@ -113,65 +310,104 @@ export default function FloorPlanPage() {
 
         {/* Canvas */}
         <div className="flex-1 overflow-auto bg-background p-8">
+          <div className="mx-auto mb-3 flex w-full max-w-[560px] items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              Drag tables, stage, dance floor, or bar. Values snap to a {GRID_SIZE}px grid.
+            </p>
+            {savedAt ? (
+              <p className="text-xs text-emerald-400/80">Saved at {savedAt}</p>
+            ) : (
+              <p className="text-xs text-muted-foreground/70">Not saved yet</p>
+            )}
+          </div>
           <div
-            className="relative mx-auto rounded-2xl border border-border bg-card/30 overflow-hidden"
+            className="relative mx-auto"
             style={{
-              width: 460 * zoom,
-              height: 440 * zoom,
-              transform: `scale(${zoom})`,
-              transformOrigin: "top left",
-              minWidth: 460,
-              minHeight: 440,
+              width: CANVAS_WIDTH * zoom,
+              height: CANVAS_HEIGHT * zoom,
             }}
           >
+            <div
+              ref={canvasRef}
+              onPointerDown={(event) => {
+                if (event.target === event.currentTarget) {
+                  setSelectedTableId(null);
+                  setSelectedFixtureId(null);
+                }
+              }}
+              className="relative rounded-2xl border border-border bg-card/30 overflow-hidden"
+              style={{
+                width: CANVAS_WIDTH,
+                height: CANVAS_HEIGHT,
+                transform: `scale(${zoom})`,
+                transformOrigin: "top left",
+              }}
+            >
             {/* Grid */}
             {showGrid && (
               <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.04 }}>
                 <defs>
-                  <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
-                    <path d="M 24 0 L 0 0 0 24" fill="none" stroke="white" strokeWidth="0.5" />
+                  <pattern id="grid" width={GRID_SIZE} height={GRID_SIZE} patternUnits="userSpaceOnUse">
+                    <path d={`M ${GRID_SIZE} 0 L 0 0 0 ${GRID_SIZE}`} fill="none" stroke="white" strokeWidth="0.5" />
                   </pattern>
                 </defs>
                 <rect width="100%" height="100%" fill="url(#grid)" />
               </svg>
             )}
 
-            {/* Stage */}
-            <div
-              className="absolute flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03]"
-              style={{ left: "50%", transform: "translateX(-50%)", top: 16, width: 180, height: 48 }}
-            >
-              <Music className="h-4 w-4 text-white/30" />
-              <span className="text-xs font-medium text-white/40">Stage / DJ</span>
-            </div>
+            {/* Fixtures */}
+            {fixtures.map((fixture) => {
+              const isSelected = selectedFixtureId === fixture.id;
 
-            {/* Dance Floor */}
-            <div
-              className="absolute flex items-center justify-center rounded-lg border border-dashed border-white/10"
-              style={{ left: "50%", transform: "translateX(-50%)", top: 76, width: 140, height: 40 }}
-            >
-              <span className="text-[10px] font-medium text-white/20">Dance Floor</span>
-            </div>
-
-            {/* Bar */}
-            <div
-              className="absolute flex items-center justify-center gap-2 rounded-xl border border-cyan-500/20 bg-cyan-500/5"
-              style={{ bottom: 14, left: 20, right: 20, height: 40 }}
-            >
-              <Wine className="h-4 w-4 text-cyan-400/60" />
-              <span className="text-xs font-semibold text-cyan-400/70">Bar</span>
-            </div>
+              return (
+                <div
+                  key={fixture.id}
+                  onPointerDown={(event) => onFixturePointerDown(fixture, event)}
+                  className={cn(
+                    "absolute cursor-grab active:cursor-grabbing transition-all duration-200 select-none",
+                    fixture.type === "dance"
+                      ? "flex items-center justify-center rounded-lg border border-dashed border-white/10"
+                      : "flex items-center justify-center gap-2 rounded-xl border",
+                    fixture.type === "stage" && "border-white/10 bg-white/[0.03]",
+                    fixture.type === "bar" && "border-cyan-500/20 bg-cyan-500/5",
+                    isSelected && "ring-2 ring-offset-2 ring-offset-card ring-sky-400/70"
+                  )}
+                  style={{
+                    left: fixture.x,
+                    top: fixture.y,
+                    width: fixture.w,
+                    height: fixture.h,
+                    boxShadow: isSelected ? "0 0 20px rgba(56,189,248,0.25)" : "none",
+                  }}
+                >
+                  {fixture.type === "stage" ? (
+                    <>
+                      <Music className="h-4 w-4 text-white/30" />
+                      <span className="text-xs font-medium text-white/40">{fixture.label}</span>
+                    </>
+                  ) : fixture.type === "bar" ? (
+                    <>
+                      <Wine className="h-4 w-4 text-cyan-400/60" />
+                      <span className="text-xs font-semibold text-cyan-400/70">{fixture.label}</span>
+                    </>
+                  ) : (
+                    <span className="text-[10px] font-medium text-white/20">{fixture.label}</span>
+                  )}
+                </div>
+              );
+            })}
 
             {/* Tables */}
             {tables.map((table) => {
               const colors = typeColors[table.type];
-              const isSelected = selectedId === table.id;
+              const isSelected = selectedTableId === table.id;
+              const isCouch = table.type === "couch";
               return (
                 <div
                   key={table.id}
-                  onClick={() => setSelectedId(table.id)}
+                  onPointerDown={(event) => onTablePointerDown(table, event)}
                   className={cn(
-                    "absolute rounded-xl cursor-pointer transition-all duration-200 flex flex-col items-center justify-center",
+                    "absolute rounded-xl cursor-grab active:cursor-grabbing transition-all duration-200 flex flex-col items-center justify-center select-none",
                     isSelected && "ring-2 ring-offset-2 ring-offset-card shadow-lg",
                     !table.available && "opacity-40"
                   )}
@@ -185,13 +421,43 @@ export default function FloorPlanPage() {
                     boxShadow: isSelected
                       ? `0 0 20px ${colors.border}40`
                       : table.available
-                      ? `0 0 10px ${colors.border}20`
+                      ? `0 6px 12px ${colors.border}20`
                       : "none",
                     ringColor: colors.border,
                   }}
                 >
                   {table.available ? (
                     <>
+                      {isCouch && (
+                        <>
+                          <div
+                            className="pointer-events-none absolute left-1.5 right-1.5 rounded-t-lg"
+                            style={{
+                              top: 3,
+                              height: Math.max(7, Math.min(12, table.h * 0.23)),
+                              background: `linear-gradient(to bottom, ${colors.border}AA, ${colors.border}66)`,
+                            }}
+                          />
+                          <div
+                            className="pointer-events-none absolute left-2 rounded-md"
+                            style={{
+                              top: 6,
+                              width: Math.max(8, Math.min(14, table.w * 0.14)),
+                              bottom: 6,
+                              background: `${colors.border}40`,
+                            }}
+                          />
+                          <div
+                            className="pointer-events-none absolute right-2 rounded-md"
+                            style={{
+                              top: 6,
+                              width: Math.max(8, Math.min(14, table.w * 0.14)),
+                              bottom: 6,
+                              background: `${colors.border}40`,
+                            }}
+                          />
+                        </>
+                      )}
                       <span className="text-[10px] font-bold" style={{ color: colors.text }}>
                         {table.label}
                       </span>
@@ -205,6 +471,7 @@ export default function FloorPlanPage() {
                 </div>
               );
             })}
+            </div>
           </div>
         </div>
       </div>
@@ -218,7 +485,7 @@ export default function FloorPlanPage() {
           </h2>
         </div>
 
-        {selected ? (
+        {selectedTable ? (
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {/* Table Info */}
             <div className="rounded-xl border border-border bg-secondary/30 p-4">
@@ -226,24 +493,55 @@ export default function FloorPlanPage() {
                 <span
                   className={cn(
                     "text-[11px] font-bold uppercase px-2 py-0.5 rounded-md border",
-                    tableTypeColors(selected.type)
+                    tableTypeColors(selectedTable.type)
                   )}
                 >
-                  {selected.type}
+                  {selectedTable.type}
                 </span>
-                <span className="text-xs text-muted-foreground">{selected.id}</span>
+                <span className="text-xs text-muted-foreground">{selectedTable.id}</span>
               </div>
-              <p className="text-lg font-bold text-foreground">{selected.label}</p>
+              <p className="text-lg font-bold text-foreground">{selectedTable.label}</p>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider block mb-1.5">
+                Label
+              </label>
+              <input
+                type="text"
+                value={selectedTable.label}
+                onChange={(event) => updateSelectedTable({ label: event.target.value.slice(0, 30) })}
+                className="w-full h-9 px-3 rounded-lg border border-border bg-card text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-gold/30"
+              />
+            </div>
+
+            <div>
+              <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider block mb-1.5">
+                Type
+              </label>
+              <select
+                value={selectedTable.type}
+                onChange={(event) =>
+                  updateSelectedTable({ type: event.target.value as TableType })
+                }
+                className="w-full h-9 px-3 rounded-lg border border-border bg-card text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-gold/30"
+              >
+                {Object.entries(typeColors).map(([key, value]) => (
+                  <option key={key} value={key}>
+                    {value.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Fields */}
             {[
-              { label: "Price ($)", value: selected.price },
-              { label: "Capacity", value: selected.capacity },
-              { label: "X Position", value: selected.x },
-              { label: "Y Position", value: selected.y },
-              { label: "Width", value: selected.w },
-              { label: "Height", value: selected.h },
+              { label: "Price ($)", value: selectedTable.price },
+              { label: "Capacity", value: selectedTable.capacity },
+              { label: "X Position", value: selectedTable.x },
+              { label: "Y Position", value: selectedTable.y },
+              { label: "Width", value: selectedTable.w },
+              { label: "Height", value: selectedTable.h },
             ].map((field) => (
               <div key={field.label}>
                 <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider block mb-1.5">
@@ -251,7 +549,18 @@ export default function FloorPlanPage() {
                 </label>
                 <input
                   type="number"
-                  defaultValue={field.value}
+                  value={field.value}
+                  onChange={(event) => {
+                    const nextValue = Number(event.target.value);
+                    if (!Number.isFinite(nextValue)) return;
+
+                    if (field.label === "Price ($)") updateSelectedTable({ price: Math.max(0, nextValue) });
+                    if (field.label === "Capacity") updateSelectedTable({ capacity: Math.max(1, nextValue) });
+                    if (field.label === "X Position") updateSelectedTable({ x: nextValue });
+                    if (field.label === "Y Position") updateSelectedTable({ y: nextValue });
+                    if (field.label === "Width") updateSelectedTable({ w: nextValue });
+                    if (field.label === "Height") updateSelectedTable({ h: nextValue });
+                  }}
                   className="w-full h-9 px-3 rounded-lg border border-border bg-card text-sm text-foreground font-tabular focus:outline-none focus:ring-2 focus:ring-gold/30"
                 />
               </div>
@@ -260,54 +569,111 @@ export default function FloorPlanPage() {
             {/* Availability Toggle */}
             <div className="flex items-center justify-between rounded-xl border border-border bg-secondary/30 p-3">
               <div className="flex items-center gap-2">
-                {selected.available ? (
+                {selectedTable.available ? (
                   <Unlock className="h-4 w-4 text-emerald-400" />
                 ) : (
                   <Lock className="h-4 w-4 text-red-400" />
                 )}
                 <span className="text-sm font-medium text-foreground">
-                  {selected.available ? "Available" : "Booked"}
+                  {selectedTable.available ? "Available" : "Booked"}
                 </span>
               </div>
               <button
                 onClick={() => {
                   setTables((prev) =>
                     prev.map((t) =>
-                      t.id === selected.id ? { ...t, available: !t.available } : t
+                      t.id === selectedTable.id ? { ...t, available: !t.available } : t
                     )
                   );
                 }}
                 className={cn(
                   "w-10 h-5 rounded-full transition-colors relative",
-                  selected.available ? "bg-emerald-500" : "bg-muted"
+                  selectedTable.available ? "bg-emerald-500" : "bg-muted"
                 )}
               >
                 <div
                   className={cn(
                     "absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform",
-                    selected.available ? "translate-x-5" : "translate-x-0.5"
+                    selectedTable.available ? "translate-x-5" : "translate-x-0.5"
                   )}
                 />
               </button>
             </div>
 
             {/* Delete */}
-            <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/5 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors">
+            <button
+              onClick={onDeleteSelected}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/5 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors"
+            >
               <Trash2 className="h-4 w-4" />
               Remove Table
             </button>
           </div>
+        ) : selectedFixture ? (
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="rounded-xl border border-border bg-secondary/30 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[11px] font-bold uppercase px-2 py-0.5 rounded-md border text-sky-300 bg-sky-400/10 border-sky-400/30">
+                  {selectedFixture.type}
+                </span>
+                <span className="text-xs text-muted-foreground">{selectedFixture.id}</span>
+              </div>
+              <p className="text-lg font-bold text-foreground">{selectedFixture.label}</p>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider block mb-1.5">
+                Label
+              </label>
+              <input
+                type="text"
+                value={selectedFixture.label}
+                onChange={(event) => updateSelectedFixture({ label: event.target.value.slice(0, 30) })}
+                className="w-full h-9 px-3 rounded-lg border border-border bg-card text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-gold/30"
+              />
+            </div>
+
+            {[
+              { label: "X Position", value: selectedFixture.x },
+              { label: "Y Position", value: selectedFixture.y },
+              { label: "Width", value: selectedFixture.w },
+              { label: "Height", value: selectedFixture.h },
+            ].map((field) => (
+              <div key={field.label}>
+                <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider block mb-1.5">
+                  {field.label}
+                </label>
+                <input
+                  type="number"
+                  value={field.value}
+                  onChange={(event) => {
+                    const nextValue = Number(event.target.value);
+                    if (!Number.isFinite(nextValue)) return;
+
+                    if (field.label === "X Position") updateSelectedFixture({ x: nextValue });
+                    if (field.label === "Y Position") updateSelectedFixture({ y: nextValue });
+                    if (field.label === "Width") updateSelectedFixture({ w: nextValue });
+                    if (field.label === "Height") updateSelectedFixture({ h: nextValue });
+                  }}
+                  className="w-full h-9 px-3 rounded-lg border border-border bg-card text-sm text-foreground font-tabular focus:outline-none focus:ring-2 focus:ring-gold/30"
+                />
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
             <Move className="h-10 w-10 text-muted-foreground/20 mb-3" />
-            <p className="text-sm text-muted-foreground">Select a table to edit</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">Click on any table in the floor plan</p>
+            <p className="text-sm text-muted-foreground">Select an element to edit</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">Click any table, stage, dance floor, or bar</p>
           </div>
         )}
 
         {/* Add Table */}
         <div className="p-4 border-t border-border">
-          <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-muted-foreground/30 transition-all">
+          <button
+            onClick={onAddTable}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-muted-foreground/30 transition-all"
+          >
             <Plus className="h-4 w-4" />
             Add Table
           </button>
@@ -323,6 +689,155 @@ function tableTypeColors(type: string): string {
     premium: "text-purple-400 bg-purple-400/10 border-purple-400/20",
     booth: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
     bar: "text-cyan-400 bg-cyan-400/10 border-cyan-400/20",
+    couch: "text-orange-300 bg-orange-400/10 border-orange-400/20",
   };
   return map[type] || "";
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function snapToGrid(value: number) {
+  return Math.round(value / GRID_SIZE) * GRID_SIZE;
+}
+
+function normalizeTable(table: Table): Table {
+  const w = clamp(Math.round(table.w), 40, CANVAS_WIDTH);
+  const h = clamp(Math.round(table.h), 32, CANVAS_HEIGHT);
+
+  return {
+    ...table,
+    x: clamp(Math.round(table.x), 0, CANVAS_WIDTH - w),
+    y: clamp(Math.round(table.y), 0, CANVAS_HEIGHT - h),
+    w,
+    h,
+    price: Math.max(0, Math.round(table.price)),
+    capacity: Math.max(1, Math.round(table.capacity)),
+  };
+}
+
+function normalizeFixture(fixture: Fixture): Fixture {
+  const w = clamp(Math.round(fixture.w), 60, CANVAS_WIDTH);
+  const h = clamp(Math.round(fixture.h), 28, CANVAS_HEIGHT);
+
+  return {
+    ...fixture,
+    x: clamp(Math.round(fixture.x), 0, CANVAS_WIDTH - w),
+    y: clamp(Math.round(fixture.y), 0, CANVAS_HEIGHT - h),
+    w,
+    h,
+  };
+}
+
+function nextTableIndex(tables: Table[]) {
+  const currentMax = tables.reduce((max, table) => {
+    const numericId = Number(table.id.replace(/^\D+/, ""));
+    return Number.isFinite(numericId) ? Math.max(max, numericId) : max;
+  }, 0);
+
+  return currentMax + 1;
+}
+
+function pointerToCanvas(
+  canvas: HTMLDivElement | null,
+  clientX: number,
+  clientY: number
+) {
+  if (!canvas) return null;
+
+  const rect = canvas.getBoundingClientRect();
+  if (!rect.width || !rect.height) return null;
+
+  const scaleX = rect.width / CANVAS_WIDTH;
+  const scaleY = rect.height / CANVAS_HEIGHT;
+
+  return {
+    x: (clientX - rect.left) / scaleX,
+    y: (clientY - rect.top) / scaleY,
+  };
+}
+
+function loadStoredLayout(): { tables: Table[]; fixtures: Fixture[] } {
+  if (typeof window === "undefined") {
+    return { tables: initialTables, fixtures: initialFixtures };
+  }
+
+  try {
+    const raw =
+      window.localStorage.getItem(STORAGE_KEY) ??
+      window.localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (!raw) {
+      return { tables: initialTables, fixtures: initialFixtures };
+    }
+
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      const legacyTables = parsed.filter(isStoredTable).map((table) => normalizeTable(table));
+      return {
+        tables: legacyTables.length > 0 ? legacyTables : initialTables,
+        fixtures: initialFixtures,
+      };
+    }
+
+    if (!parsed || typeof parsed !== "object") {
+      return { tables: initialTables, fixtures: initialFixtures };
+    }
+
+    const tableList = Array.isArray(parsed.tables) ? parsed.tables : [];
+    const fixtureList = Array.isArray(parsed.fixtures) ? parsed.fixtures : [];
+
+    const loadedTables = tableList.filter(isStoredTable).map((table) => normalizeTable(table));
+    const loadedFixtures = fixtureList.filter(isStoredFixture).map((fixture) => normalizeFixture(fixture));
+
+    return {
+      tables: loadedTables.length > 0 ? loadedTables : initialTables,
+      fixtures: loadedFixtures.length > 0 ? loadedFixtures : initialFixtures,
+    };
+  } catch {
+    return { tables: initialTables, fixtures: initialFixtures };
+  }
+}
+
+function isTableType(value: unknown): value is TableType {
+  return value === "vip" || value === "premium" || value === "booth" || value === "bar" || value === "couch";
+}
+
+function isFixtureType(value: unknown): value is FixtureType {
+  return value === "stage" || value === "dance" || value === "bar";
+}
+
+function isStoredTable(item: unknown): item is Table {
+  if (!item || typeof item !== "object") return false;
+
+  const value = item as Record<string, unknown>;
+
+  return (
+    typeof value.id === "string" &&
+    typeof value.label === "string" &&
+    isTableType(value.type) &&
+    typeof value.x === "number" &&
+    typeof value.y === "number" &&
+    typeof value.w === "number" &&
+    typeof value.h === "number" &&
+    typeof value.price === "number" &&
+    typeof value.capacity === "number" &&
+    typeof value.available === "boolean"
+  );
+}
+
+function isStoredFixture(item: unknown): item is Fixture {
+  if (!item || typeof item !== "object") return false;
+
+  const value = item as Record<string, unknown>;
+
+  return (
+    typeof value.id === "string" &&
+    typeof value.label === "string" &&
+    isFixtureType(value.type) &&
+    typeof value.x === "number" &&
+    typeof value.y === "number" &&
+    typeof value.w === "number" &&
+    typeof value.h === "number"
+  );
 }
