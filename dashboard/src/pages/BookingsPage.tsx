@@ -12,6 +12,7 @@ import {
   CalendarDays,
   Users,
   DollarSign,
+  X,
 } from "lucide-react";
 import { MetalButton } from "@/components/ui/liquid-glass-button";
 import { cn } from "@/lib/utils";
@@ -62,6 +63,7 @@ const filters = ["All", "Confirmed", "Pending", "Cancelled"] as const;
 export default function BookingsPage() {
   const [activeFilter, setActiveFilter] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showGuestList, setShowGuestList] = useState(false);
 
   const filtered = allBookings.filter((b) => {
     const matchesFilter =
@@ -80,8 +82,48 @@ export default function BookingsPage() {
     .filter((b) => b.status !== "cancelled")
     .reduce((sum, b) => sum + b.spend, 0);
 
+  const tonightGuests = allBookings.filter((b) => b.date === "Mar 8" && b.status !== "cancelled");
+
   return (
     <div className="p-6 md:p-8 max-w-[1600px] mx-auto">
+      {/* Guest List Modal */}
+      {showGuestList && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowGuestList(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="relative w-full max-w-md rounded-2xl border border-border bg-card shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-5 border-b border-border">
+              <div>
+                <h3 className="text-base font-semibold text-foreground">Tonight's Guest List</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Mar 8 · {tonightGuests.length} reservations</p>
+              </div>
+              <button onClick={() => setShowGuestList(false)} className="rounded-lg p-1.5 hover:bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="divide-y divide-border/50 max-h-[60vh] overflow-y-auto">
+              {tonightGuests.map((b) => (
+                <div key={b.id} className="flex items-center justify-between px-5 py-3.5">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full bg-secondary/50 flex items-center justify-center text-xs font-bold text-foreground">
+                      {b.guest.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{b.guest}</p>
+                      <p className="text-xs text-muted-foreground">{b.table} · {b.time} · Party of {b.party}</p>
+                    </div>
+                  </div>
+                  <span className={cn(
+                    "text-xs font-medium px-2 py-0.5 rounded-full border",
+                    b.status === "confirmed" ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" : "text-amber-400 bg-amber-500/10 border-amber-500/20"
+                  )}>
+                    {b.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <header className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start mb-8">
         <div>
@@ -97,7 +139,7 @@ export default function BookingsPage() {
             <Download className="h-4 w-4" />
             Export
           </button>
-          <MetalButton variant="gold">Guest List</MetalButton>
+          <MetalButton variant="gold" onClick={() => setShowGuestList(true)}>Guest List</MetalButton>
         </div>
       </header>
 

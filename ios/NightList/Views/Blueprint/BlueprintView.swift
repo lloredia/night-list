@@ -6,6 +6,7 @@ struct BlueprintView: View {
     @Environment(\.dismiss) var dismiss
     @State private var selectedTable: VenueTable?
     @State private var showTableSheet = false
+    @State private var showBookingSheet = false
     @State private var scale: CGFloat = 1.0
     @State private var animateIn = false
 
@@ -185,11 +186,21 @@ struct BlueprintView: View {
         }
         .sheet(isPresented: $showTableSheet) {
             if let table = selectedTable {
-                TableDetailView(table: table, venue: venue)
-                    .presentationDetents([.large])
-                    .presentationDragIndicator(.visible)
-                    .presentationBackground(Color(white: 0.04))
-                    .presentationCornerRadius(28)
+                TableDetailView(table: table, venue: venue, onBook: {
+                    showTableSheet = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        showBookingSheet = true
+                    }
+                })
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(Color(white: 0.04))
+                .presentationCornerRadius(28)
+            }
+        }
+        .fullScreenCover(isPresented: $showBookingSheet) {
+            if let table = selectedTable {
+                BookingConfirmView(table: table, venue: venue)
             }
         }
     }
@@ -199,6 +210,7 @@ struct BlueprintView: View {
 struct TableDetailView: View {
     let table: VenueTable
     let venue: Venue
+    var onBook: (() -> Void)? = nil
 
     var body: some View {
         VStack(spacing: 16) {
@@ -231,7 +243,7 @@ struct TableDetailView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            Button(action: {}) {
+            Button(action: { onBook?() }) {
                 Text("Request this table")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.black)

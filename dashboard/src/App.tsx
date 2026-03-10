@@ -12,7 +12,7 @@ export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const pages: Record<string, JSX.Element> = {
-    dashboard: <DashboardHome />,
+    dashboard: <DashboardHome onNavigate={setActivePage} />,
     bookings: <BookingsPage />,
     floorplan: <FloorPlanPage />,
     promoters: <PromotersPage />,

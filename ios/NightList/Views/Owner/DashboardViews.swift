@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - My Bookings
 struct MyBookingsView: View {
     // TODO: Replace with @StateObject BookingViewModel pulling from Supabase
-    let bookings: [Booking] = []
+    let bookings: [Booking] = Booking.mockBookings
 
     var body: some View {
         NavigationStack {

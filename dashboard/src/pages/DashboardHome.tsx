@@ -103,12 +103,16 @@ const STATS = [
   },
 ];
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: {
+  active?: boolean;
+  payload?: Array<{ name?: string; value?: number | string; color?: string }>;
+  label?: string;
+}) => {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-lg border border-border bg-card p-3 shadow-xl">
         <p className="text-xs font-medium text-muted-foreground mb-1">{label}</p>
-        {payload.map((item: any, i: number) => (
+        {payload.map((item, i) => (
           <p key={i} className="text-sm font-semibold" style={{ color: item.color }}>
             {item.name === "revenue"
               ? `$${Number(item.value).toLocaleString()}`
@@ -124,7 +128,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export default function DashboardHome() {
+export default function DashboardHome({ onNavigate }: { onNavigate?: (page: string) => void }) {
   return (
     <div className="p-6 md:p-8 max-w-[1600px] mx-auto">
       {/* Header */}
@@ -151,7 +155,7 @@ export default function DashboardHome() {
             <Download className="h-4 w-4" />
             Export
           </button>
-          <MetalButton variant="gold">
+          <MetalButton variant="gold" onClick={() => onNavigate?.("bookings")}>
             <Plus className="h-4 w-4 mr-1" />
             Add Booking
           </MetalButton>

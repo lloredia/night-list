@@ -5,7 +5,7 @@ struct DiscoverView: View {
     @State private var searchText = ""
 
     let dates = ["FRI, MAR 7", "SAT, MAR 8", "SUN, MAR 9", "FRI, MAR 14"]
-    let venues = [Venue.mock] // TODO: Replace with @StateObject VenueViewModel
+    let venues = Venue.mockVenues // TODO: Replace with @StateObject VenueViewModel
 
     var body: some View {
         NavigationStack {

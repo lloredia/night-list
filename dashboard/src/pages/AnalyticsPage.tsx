@@ -57,16 +57,20 @@ const promoterROI = [
   { name: "Kai Jordan", bookings: 11, revenue: 4200, commission: 420, roi: 900 },
 ];
 
-const ChartTooltip = ({ active, payload, label }: any) => {
+const ChartTooltip = ({ active, payload, label }: {
+  active?: boolean;
+  payload?: Array<{ name?: string; value?: number | string; color?: string }>;
+  label?: string;
+}) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-lg border border-border bg-popover/95 backdrop-blur-sm px-3 py-2 shadow-xl">
       <p className="text-xs font-medium text-foreground mb-1">{label}</p>
-      {payload.map((p: any, i: number) => (
+      {payload.map((p, i) => (
         <p key={i} className="text-xs" style={{ color: p.color }}>
           {p.name}: {typeof p.value === "number" && p.name?.toLowerCase().includes("revenue")
             ? `$${p.value.toLocaleString()}`
-            : p.value.toLocaleString()}
+            : String(p.value ?? "").toLocaleString()}
         </p>
       ))}
     </div>

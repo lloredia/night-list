@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   Crown,
   Star,
@@ -270,6 +270,3 @@ export default function PromotersPage() {
     </div>
   );
 }
-
-// Need React for createElement
-import React from "react";
