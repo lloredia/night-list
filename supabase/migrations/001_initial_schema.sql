@@ -37,7 +37,7 @@ create table public.profiles (
 -- ============================================================
 
 create table public.venues (
-  id             uuid primary key default uuid_generate_v4(),
+  id             uuid primary key default gen_random_uuid(),
   owner_id       uuid not null references public.profiles(id) on delete cascade,
   name           text not null,
   slug           text not null unique,
@@ -80,7 +80,7 @@ create index venues_slug_idx on public.venues(slug);
 -- ============================================================
 
 create table public.venue_tables (
-  id              uuid primary key default uuid_generate_v4(),
+  id              uuid primary key default gen_random_uuid(),
   venue_id        uuid not null references public.venues(id) on delete cascade,
   label           text not null,
   type            table_type not null default 'vip',
@@ -111,7 +111,7 @@ create index venue_tables_venue_id_idx on public.venue_tables(venue_id);
 -- ============================================================
 
 create table public.events (
-  id              uuid primary key default uuid_generate_v4(),
+  id              uuid primary key default gen_random_uuid(),
   venue_id        uuid not null references public.venues(id) on delete cascade,
   name            text not null,
   description     text,
@@ -132,7 +132,7 @@ create index events_date_idx on public.events(event_date);
 -- ============================================================
 
 create table public.promoters (
-  id              uuid primary key default uuid_generate_v4(),
+  id              uuid primary key default gen_random_uuid(),
   venue_id        uuid not null references public.venues(id) on delete cascade,
   profile_id      uuid references public.profiles(id) on delete set null,
   name            text not null,
@@ -158,7 +158,7 @@ create index promoters_slug_idx on public.promoters(slug);
 -- If they don't complete checkout, the lock expires automatically.
 
 create table public.table_locks (
-  id              uuid primary key default uuid_generate_v4(),
+  id              uuid primary key default gen_random_uuid(),
   table_id        uuid not null references public.venue_tables(id) on delete cascade,
   event_date      date not null,
   locked_by       uuid references public.profiles(id) on delete cascade,
@@ -176,7 +176,7 @@ create index table_locks_expiry_idx on public.table_locks(locked_until);
 -- ============================================================
 
 create table public.bookings (
-  id              uuid primary key default uuid_generate_v4(),
+  id              uuid primary key default gen_random_uuid(),
   -- Relationships
   venue_id        uuid not null references public.venues(id),
   table_id        uuid not null references public.venue_tables(id),
@@ -226,7 +226,7 @@ create index bookings_confirmation_code_idx on public.bookings(confirmation_code
 -- ============================================================
 
 create table public.commissions (
-  id              uuid primary key default uuid_generate_v4(),
+  id              uuid primary key default gen_random_uuid(),
   booking_id      uuid not null references public.bookings(id) on delete cascade,
   promoter_id     uuid not null references public.promoters(id),
   venue_id        uuid not null references public.venues(id),

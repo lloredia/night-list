@@ -8,7 +8,6 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Moon,
 } from "lucide-react";
 
 const NAV = [
@@ -44,7 +43,7 @@ export default function Sidebar({
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 pt-6 pb-2">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-gold/20 to-gold/5 border border-gold/20">
-          <Moon className="h-4 w-4 text-gold" />
+          <img src="/assets/logo/svg/logo.svg" alt="NightList" className="h-4 w-4 object-contain" />
         </div>
         {!collapsed && (
           <div className="overflow-hidden">

@@ -13,6 +13,7 @@ import {
   Music,
   Wine,
   Grid3X3,
+  Undo2,
 } from "lucide-react";
 import { MetalButton } from "@/components/ui/liquid-glass-button";
 import { cn } from "@/lib/utils";
@@ -82,6 +83,10 @@ export default function FloorPlanPage() {
   const [zoom, setZoom] = useState(1);
   const [showGrid, setShowGrid] = useState(true);
   const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const [lastSaved, setLastSaved] = useState<{ tables: Table[]; fixtures: Fixture[] } | null>(null);
+  const isFirstRender = useRef(true);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<{
@@ -145,12 +150,50 @@ export default function FloorPlanPage() {
 
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerUp);
 
     return () => {
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerUp);
     };
   }, []);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    setIsDirty(true);
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(() => {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ tables, fixtures }));
+      setSavedAt(new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }));
+      setIsDirty(false);
+    }, 2000);
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    };
+  }, [tables, fixtures]);
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "SELECT" || target.tagName === "TEXTAREA") return;
+
+      if (event.key === "Escape") {
+        setSelectedTableId(null);
+        setSelectedFixtureId(null);
+      }
+      if ((event.key === "Delete" || event.key === "Backspace") && selectedTableId) {
+        setTables((prev) => prev.filter((t) => t.id !== selectedTableId));
+        setSelectedTableId(null);
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selectedTableId]);
 
   const updateSelectedTable = (patch: Partial<Table>) => {
     if (!selectedTableId) return;
@@ -217,14 +260,54 @@ export default function FloorPlanPage() {
 
   const onDeleteSelected = () => {
     if (!selectedTableId) return;
-
     setTables((previous) => previous.filter((table) => table.id !== selectedTableId));
     setSelectedTableId(null);
   };
 
-  const onAddTable = () => {
+  const onDeleteSelectedFixture = () => {
+    if (!selectedFixtureId) return;
+    setFixtures((previous) => previous.filter((f) => f.id !== selectedFixtureId));
+    setSelectedFixtureId(null);
+  };
+
+  const onDiscardChanges = () => {
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    if (lastSaved) {
+      setTables(lastSaved.tables);
+      setFixtures(lastSaved.fixtures);
+    } else {
+      setTables(initialTables);
+      setFixtures(initialFixtures);
+    }
+    setIsDirty(false);
+    setSelectedTableId(null);
+    setSelectedFixtureId(null);
+  };
+
+  const onAddFixture = (type: FixtureType) => {
+    const nextIndex = nextFixtureIndex(fixtures);
+    const defaults: Record<FixtureType, { label: string; w: number; h: number }> = {
+      stage: { label: "Stage / DJ", w: 180, h: 48 },
+      dance: { label: "Dance Floor", w: 140, h: 40 },
+      bar:   { label: "Bar",         w: 420, h: 40 },
+    };
+    const { label, w, h } = defaults[type];
+    const newFixture = normalizeFixture({
+      id: `F${nextIndex}`,
+      label,
+      type,
+      x: 80,
+      y: 120,
+      w,
+      h,
+    });
+    setFixtures((previous) => [...previous, newFixture]);
+    setSelectedFixtureId(newFixture.id);
+    setSelectedTableId(null);
+  };
+
+  const onAddTable = (type: TableType = "vip") => {
     const nextIndex = nextTableIndex(tables);
-    const type: TableType = "vip";
 
     const newTable = normalizeTable({
       id: `T${nextIndex}`,
@@ -246,10 +329,11 @@ export default function FloorPlanPage() {
 
   const onSaveLayout = () => {
     if (typeof window === "undefined") return;
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ tables, fixtures }));
-    setSavedAt(
-      new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
-    );
+    setSavedAt(new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }));
+    setLastSaved({ tables, fixtures });
+    setIsDirty(false);
   };
 
   return (
@@ -286,6 +370,15 @@ export default function FloorPlanPage() {
             <button onClick={() => setZoom(1)} className="p-2 rounded-lg border border-border bg-card/50 text-muted-foreground hover:text-foreground transition-all">
               <RotateCcw className="h-4 w-4" />
             </button>
+            {isDirty && (
+              <button
+                onClick={onDiscardChanges}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card/50 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-muted-foreground/30 transition-all"
+              >
+                <Undo2 className="h-3.5 w-3.5" />
+                Discard
+              </button>
+            )}
             <MetalButton variant="gold" onClick={onSaveLayout}>
               <Save className="h-4 w-4 mr-1" />
               Save Layout
@@ -313,7 +406,12 @@ export default function FloorPlanPage() {
             <p className="text-xs text-muted-foreground">
               Drag tables, stage, dance floor, or bar. Values snap to a {GRID_SIZE}px grid.
             </p>
-            {savedAt ? (
+            {isDirty ? (
+              <p className="text-xs text-amber-400/80 flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 inline-block" />
+                Unsaved changes
+              </p>
+            ) : savedAt ? (
               <p className="text-xs text-emerald-400/80">Saved at {savedAt}</p>
             ) : (
               <p className="text-xs text-muted-foreground/70">Not saved yet</p>
@@ -627,6 +725,14 @@ export default function FloorPlanPage() {
                 />
               </div>
             ))}
+
+            <button
+              onClick={onDeleteSelectedFixture}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/5 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors"
+            >
+              <Trash2 className="h-4 w-4" />
+              Remove Fixture
+            </button>
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
@@ -637,14 +743,42 @@ export default function FloorPlanPage() {
         )}
 
         {/* Add Table */}
-        <div className="p-4 border-t border-border">
-          <button
-            onClick={onAddTable}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-muted-foreground/30 transition-all"
-          >
-            <Plus className="h-4 w-4" />
+        <div className="p-4 border-t border-border space-y-2">
+          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <Plus className="h-3 w-3" />
             Add Table
-          </button>
+          </p>
+          <div className="grid grid-cols-2 gap-1.5">
+            {(Object.entries(typeColors) as [TableType, typeof typeColors[TableType]][]).map(([key, val]) => (
+              <button
+                key={key}
+                onClick={() => onAddTable(key)}
+                className="flex items-center gap-1.5 rounded-lg border border-border bg-card/50 px-2.5 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-muted-foreground/30 transition-all"
+              >
+                <div className="h-2 w-2 rounded-sm flex-shrink-0" style={{ background: val.border }} />
+                {val.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Add Fixture */}
+        <div className="px-4 pb-4 space-y-2">
+          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <Plus className="h-3 w-3" />
+            Add Fixture
+          </p>
+          <div className="grid grid-cols-3 gap-1.5">
+            {(["stage", "dance", "bar"] as FixtureType[]).map((type) => (
+              <button
+                key={type}
+                onClick={() => onAddFixture(type)}
+                className="flex items-center justify-center rounded-lg border border-border bg-card/50 px-2 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-muted-foreground/30 transition-all capitalize"
+              >
+                {type}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -702,7 +836,14 @@ function nextTableIndex(tables: Table[]) {
     const numericId = Number(table.id.replace(/^\D+/, ""));
     return Number.isFinite(numericId) ? Math.max(max, numericId) : max;
   }, 0);
+  return currentMax + 1;
+}
 
+function nextFixtureIndex(fixtures: Fixture[]) {
+  const currentMax = fixtures.reduce((max, fixture) => {
+    const numericId = Number(fixture.id.replace(/^\D+/, ""));
+    return Number.isFinite(numericId) ? Math.max(max, numericId) : max;
+  }, 0);
   return currentMax + 1;
 }
 
