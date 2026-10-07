@@ -35,6 +35,9 @@ yarn-error.log*
 dist-ssr/
 *.local
 
+# Supabase CLI
+supabase/.temp
+
 # Editor
 .vscode/
 .idea/

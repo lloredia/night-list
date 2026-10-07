@@ -13,7 +13,6 @@
 
 import { supabase } from "./supabase";
 import type {
-  VenueTable,
   VenueTableWithAvailability,
   Booking,
   BookingStatus,
@@ -142,8 +141,8 @@ export async function createBooking(
     p_guest_id: user.id,
     p_event_date: input.eventDate,
     p_party_size: input.partySize,
-    p_promoter_slug: input.promoterSlug ?? null,
-    p_special_requests: input.specialRequests ?? null,
+    p_promoter_slug: input.promoterSlug,
+    p_special_requests: input.specialRequests,
   });
 
   if (error) return { success: false, error: error.message };
