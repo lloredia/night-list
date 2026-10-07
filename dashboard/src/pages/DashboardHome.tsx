@@ -5,8 +5,6 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  LineChart,
-  Line,
   Area,
   AreaChart,
 } from "recharts";
@@ -17,7 +15,6 @@ import {
   Armchair,
   TrendingUp,
   ArrowUpRight,
-  ArrowDownRight,
   Clock,
   Download,
   Plus,

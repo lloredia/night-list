@@ -519,7 +519,6 @@ export default function FloorPlanPage() {
                       : table.available
                       ? `0 6px 12px ${colors.border}20`
                       : "none",
-                    ringColor: colors.border,
                   }}
                 >
                   {table.available ? (
@@ -879,9 +878,10 @@ function loadStoredLayout(): { tables: Table[]; fixtures: Fixture[] } {
       return { tables: initialTables, fixtures: initialFixtures };
     }
 
-    const parsed = JSON.parse(raw);
+    const parsed: unknown = JSON.parse(raw);
     if (Array.isArray(parsed)) {
-      const legacyTables = parsed
+      const legacyItems = parsed as unknown[];
+      const legacyTables = legacyItems
         .map(coerceStoredTable)
         .filter((table): table is Table => table !== null)
         .map((table) => normalizeTable(table));
@@ -891,12 +891,12 @@ function loadStoredLayout(): { tables: Table[]; fixtures: Fixture[] } {
       };
     }
 
-    if (!parsed || typeof parsed !== "object") {
+    if (!isRecord(parsed)) {
       return { tables: initialTables, fixtures: initialFixtures };
     }
 
-    const tableList = Array.isArray(parsed.tables) ? parsed.tables : [];
-    const fixtureList = Array.isArray(parsed.fixtures) ? parsed.fixtures : [];
+    const tableList: unknown[] = Array.isArray(parsed.tables) ? parsed.tables : [];
+    const fixtureList: unknown[] = Array.isArray(parsed.fixtures) ? parsed.fixtures : [];
 
     const loadedTables = tableList
       .map(coerceStoredTable)
@@ -911,6 +911,10 @@ function loadStoredLayout(): { tables: Table[]; fixtures: Fixture[] } {
   } catch {
     return { tables: initialTables, fixtures: initialFixtures };
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }
 
 function isTableType(value: unknown): value is TableType {

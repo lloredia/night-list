@@ -135,7 +135,9 @@ function loadSettings(): SettingsState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return { ...defaultSettings, ...JSON.parse(raw) };
-  } catch {}
+  } catch (error) {
+    console.warn("Night List settings could not be read; using defaults.", error);
+  }
   return defaultSettings;
 }
 

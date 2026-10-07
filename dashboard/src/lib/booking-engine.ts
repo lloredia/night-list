@@ -13,7 +13,6 @@
 
 import { supabase } from "./supabase";
 import type {
-  VenueTable,
   VenueTableWithAvailability,
   Booking,
   BookingStatus,
