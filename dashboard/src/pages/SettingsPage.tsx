@@ -135,7 +135,9 @@ function loadSettings(): SettingsState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return { ...defaultSettings, ...JSON.parse(raw) };
-  } catch {}
+  } catch {
+    // Saved settings are optional. Fall back to defaults if JSON is unreadable.
+  }
   return defaultSettings;
 }
 

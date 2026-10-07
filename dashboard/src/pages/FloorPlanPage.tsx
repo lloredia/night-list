@@ -519,7 +519,6 @@ export default function FloorPlanPage() {
                       : table.available
                       ? `0 6px 12px ${colors.border}20`
                       : "none",
-                    ringColor: colors.border,
                   }}
                 >
                   {table.available ? (
@@ -879,7 +878,7 @@ function loadStoredLayout(): { tables: Table[]; fixtures: Fixture[] } {
       return { tables: initialTables, fixtures: initialFixtures };
     }
 
-    const parsed = JSON.parse(raw);
+    const parsed: unknown = JSON.parse(raw);
     if (Array.isArray(parsed)) {
       const legacyTables = parsed
         .map(coerceStoredTable)
@@ -895,8 +894,9 @@ function loadStoredLayout(): { tables: Table[]; fixtures: Fixture[] } {
       return { tables: initialTables, fixtures: initialFixtures };
     }
 
-    const tableList = Array.isArray(parsed.tables) ? parsed.tables : [];
-    const fixtureList = Array.isArray(parsed.fixtures) ? parsed.fixtures : [];
+    const record = parsed as Record<string, unknown>;
+    const tableList: unknown[] = Array.isArray(record.tables) ? record.tables : [];
+    const fixtureList: unknown[] = Array.isArray(record.fixtures) ? record.fixtures : [];
 
     const loadedTables = tableList
       .map(coerceStoredTable)
