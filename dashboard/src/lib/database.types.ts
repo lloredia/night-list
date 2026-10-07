@@ -1,4 +1,5 @@
-// Auto-generated from Supabase schema — run `supabase gen types typescript` to regenerate
+// Hand-maintained types for supabase/migrations/001_initial_schema.sql.
+// Relationships are included so @supabase/supabase-js can type `.from()` and `.rpc()`.
 
 export type UserRole = "guest" | "promoter" | "owner" | "admin";
 export type TableType = "vip" | "premium" | "bar" | "booth";
@@ -22,6 +23,7 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["profiles"]["Row"], "created_at" | "updated_at">;
         Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>;
+        Relationships: [];
       };
       venues: {
         Row: {
@@ -58,6 +60,7 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["venues"]["Row"], "id" | "created_at" | "updated_at">;
         Update: Partial<Database["public"]["Tables"]["venues"]["Insert"]>;
+        Relationships: [];
       };
       venue_tables: {
         Row: {
@@ -84,6 +87,7 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["venue_tables"]["Row"], "id" | "created_at" | "updated_at">;
         Update: Partial<Database["public"]["Tables"]["venue_tables"]["Insert"]>;
+        Relationships: [];
       };
       events: {
         Row: {
@@ -101,6 +105,7 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["events"]["Row"], "id" | "created_at" | "updated_at">;
         Update: Partial<Database["public"]["Tables"]["events"]["Insert"]>;
+        Relationships: [];
       };
       promoters: {
         Row: {
@@ -119,6 +124,7 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["promoters"]["Row"], "id" | "created_at" | "updated_at">;
         Update: Partial<Database["public"]["Tables"]["promoters"]["Insert"]>;
+        Relationships: [];
       };
       table_locks: {
         Row: {
@@ -132,6 +138,7 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["table_locks"]["Row"], "id" | "created_at">;
         Update: Partial<Database["public"]["Tables"]["table_locks"]["Insert"]>;
+        Relationships: [];
       };
       bookings: {
         Row: {
@@ -159,6 +166,43 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["bookings"]["Row"], "id" | "confirmation_code" | "created_at" | "updated_at">;
         Update: Partial<Database["public"]["Tables"]["bookings"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "bookings_venue_id_fkey";
+            columns: ["venue_id"];
+            isOneToOne: false;
+            referencedRelation: "venues";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "bookings_table_id_fkey";
+            columns: ["table_id"];
+            isOneToOne: false;
+            referencedRelation: "venue_tables";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "bookings_guest_id_fkey";
+            columns: ["guest_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "bookings_promoter_id_fkey";
+            columns: ["promoter_id"];
+            isOneToOne: false;
+            referencedRelation: "promoters";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "bookings_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: false;
+            referencedRelation: "events";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       commissions: {
         Row: {
@@ -175,8 +219,10 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["commissions"]["Row"], "id" | "created_at">;
         Update: Partial<Database["public"]["Tables"]["commissions"]["Insert"]>;
+        Relationships: [];
       };
     };
+    Views: Record<string, never>;
     Functions: {
       lock_table: {
         Args: {
@@ -195,8 +241,8 @@ export interface Database {
           p_guest_id: string;
           p_event_date: string;
           p_party_size: number;
-          p_promoter_slug?: string;
-          p_special_requests?: string;
+          p_promoter_slug?: string | null;
+          p_special_requests?: string | null;
         };
         Returns: {
           success: boolean;
@@ -208,7 +254,7 @@ export interface Database {
         };
       };
       cleanup_expired_locks: {
-        Args: Record<never, never>;
+        Args: never;
         Returns: number;
       };
     };
